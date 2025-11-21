@@ -1,43 +1,44 @@
-import sys
 import os
+import requests
+from config.settings import PERPLEXITY_API_KEY
 
+api_key = PERPLEXITY_API_KEY
+url = "https://api.perplexity.ai/chat/completions"
+payload = {
+    "prompt": "A futuristic cityscape at sunset, ultra-realistic.",
+    "model": "image-alpha-001"
+}
+headers = {
+    "Authorization": f"Bearer {api_key}",
+    "Content-Type": "application/json"
+}
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-module_path = os.getcwd()
+response = requests.post(url, json=payload, headers=headers)
 
-sys.path.insert(0, module_path)
+# Check for API errors before parsing JSON
+if response.status_code != 200:
+    print("Image generation API failed:", response.status_code, response.text)
+    raise RuntimeError("Image generation API call failed")
 
-print("WORKING DIRECTORY: ", os.getcwd())
-print("PTYHONPATH: ", os.environ.get('PYTHONPATH'))
-print("SYSPATH: ", sys.path)
+# Safely get image_url key
+json_response = response.json()
+if 'image_url' not in json_response:
+    print("No image_url in response. Full response:", json_response)
+    raise KeyError("image_url missing in API response.")
 
+image_url = json_response['image_url']
 
-from google import genai
-from config.settings import GEMINI_API_KEY
+folder_name = "data/raw"   # Relative path (recommended)
+image_filename = "output_image.png"
 
+os.makedirs(folder_name, exist_ok=True)
 
-def ask_gemini(prompt: str) -> str:
-    """
-    Send a prompt to Gemini AI and return the model's text response.
-    """
-
-    # Create the client
-    client = genai.Client()
-
-    models = client.models.list_models()
-    for model in models:
-        print(model.name, model.supported_generation_methods)
-
-    # Interrogate the model
-    response = client.models.generate_content(
-        model="gemini-1.5-flash",
-        contents=prompt
-    )
-
-    return response.text
-
-
-if __name__ == "__main__":
-    question = "Explain the difference between supervised and unsupervised learning."
-    answer = ask_gemini(question)
-    print("Gemini response:\n", answer)
+# Download the image
+img_response = requests.get(image_url)
+if img_response.status_code == 200:
+    file_path = os.path.join(folder_name, image_filename)
+    with open(file_path, 'wb') as f:
+        f.write(img_response.content)
+    print(f"Image saved to {file_path}")
+else:
+    print("Failed to download the image. Status:", img_response.status_code, img_response.text)
