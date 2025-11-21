@@ -1,0 +1,1 @@
+# detectie-defecte-suprafata-rn
