@@ -149,8 +149,8 @@ project-name/
 
 **Disciplina:** Rețele Neuronale
 **Instituție:** POLITEHNICA București – FIIR
-**Student:** [Numele Tau Aici]
-**Link Repository GitHub:** [Link-ul Tau Aici]
+**Student:** Velcea Alexandra
+**Link Repository GitHub:** https://github.com/alexandraVelcea/detectie-defecte-suprafata-rn
 **Data:** 05.12.2024
 
 ---
@@ -182,8 +182,8 @@ Trebuie să livrați un SCHELET COMPLET și FUNCȚIONAL al întregului Sistem cu
 |---------------------|-------------------------------------|--------------------------|
 | **Etichetare/adnotare manuală** | • Etichetat manual 100+ imagini defecte sudură | Imagini .png cu adnotări în fișiere xml |
 
-**Total observații finale:** ~2000 imagini (estimat pentru final)
-**Observații originale:** ~800+ imagini (40%+)
+**Total observații finale:** ~250 imagini (estimat pentru final)
+**Observații originale:** ~100+ imagini (40%+)
 
 **Tipul contribuției:**
 [ ] Date generate prin simulare fizică
@@ -208,7 +208,7 @@ Scriptul Python (`generate_data.py`) utilizează prompt-uri inginerești specifi
 
 ---
 
-### 3. Diagrama State Machine a Întregului Sistem (OBLIGATORIE)
+### 3. Diagrama State Machine a întregului sistem
 
 **Locație fișier:** `docs/state_machine.png`
 
@@ -217,6 +217,8 @@ Scriptul Python (`generate_data.py`) utilizează prompt-uri inginerești specifi
 Am ales arhitectura de tip **Clasificare/Detecție la cerere**, specifică sistemelor de controlul calitatății de pe liniile de producție.
 
 **Stările principale sunt:**
+**!!! DE EDTIAT !!!**
+**CASE VALIDARE DATE + CASE AFISARE REZULTATE**
 1. **IDLE:** Sistemul așteaptă input (încărcare imagine de către operator).
 2. **ACQUIRE_DATA/LOAD:** Se încarcă imaginea (reală sau generată) și se verifică integritatea fișierului.
 3. **PREPROCESS:** Redimensionare la 640x640 (format YOLO) și normalizare pixelilor.
