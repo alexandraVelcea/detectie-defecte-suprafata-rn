@@ -144,3 +144,129 @@ project-name/
 
 ---
 
+
+# 📘 README – Etapa 4: Arhitectura Completă a Aplicației SIA bazată pe Rețele Neuronale
+
+**Disciplina:** Rețele Neuronale
+**Instituție:** POLITEHNICA București – FIIR
+**Student:** [Numele Tau Aici]
+**Link Repository GitHub:** [Link-ul Tau Aici]
+**Data:** 05.12.2024
+
+---
+
+## Scopul Etapei 4
+
+Această etapă corespunde punctului **5. Dezvoltarea arhitecturii aplicației software bazată pe RN**.
+Trebuie să livrați un SCHELET COMPLET și FUNCȚIONAL al întregului Sistem cu Inteligență Artificială (SIA).
+
+---
+
+## Livrabile obligatorii
+
+### 1. Tabelul Nevoie Reală → Soluție SIA → Modul Software
+
+| **Nevoie reală concretă** | **Cum o rezolvă SIA-ul vostru** | **Modul software responsabil** |
+| --------------------------- | --------------------------------- | -------------------------------- |
+| Detectarea automată a defectelor (zgârieturi, rugină) pe suprafețe metalice industriale | Analiză vizuală automată și localizare defecte (bounding box) cu acuratețe > 85% | RN Module (YOLOv8) + UI |
+| Generarea de date de antrenament variate pentru scenarii rare (defecte specifice) | Generare imagini sintetice fotorealiste folosind AI Generativ (Imagen 3) | Data Acquisition (GenAI Script) |
+| Alertarea operatorului în timp real la detectarea unui defect critic | Interfață vizuală cu marcare roșie a defectelor și timp de răspuns < 2s | Web Service / UI |
+
+---
+
+### 2. Contribuția voastră originală la setul de date – MINIM 40% din totalul observațiilor finale
+
+### Contribuția originală la setul de date:
+
+| **Tip contribuție** | **Exemple concrete din inginerie** | **Dovada minimă cerută** |
+|---------------------|-------------------------------------|--------------------------|
+| **Etichetare/adnotare manuală** | • Etichetat manual 100+ imagini defecte sudură | Imagini .png cu adnotări în fișiere xml |
+
+**Total observații finale:** ~2000 imagini (estimat pentru final)
+**Observații originale:** ~800+ imagini (40%+)
+
+**Tipul contribuției:**
+[ ] Date generate prin simulare fizică
+[ ] Date achiziționate cu senzori proprii
+[ ] Etichetare/adnotare manuală
+[x] **Date sintetice prin Generative AI**
+
+**Descriere detaliată:**
+Pentru a compensa lipsa de diversitate în dataset-urile publice (precum NEU-DET) și pentru a evita overfitting-ul, am dezvoltat un modul de generare a datelor sintetice folosind **Google GenAI SDK (modelul `imagen-3.0`)**.
+
+Scriptul Python (`generate_data.py`) utilizează prompt-uri inginerești specifice (ex: *"industrial metal surface with deep rust and scratches, isometric view, photorealistic"*) pentru a crea variații unice ale defectelor. Aceste imagini sunt salvate automat, verificate și vor fi integrate în pipeline-ul de antrenare alături de datele reale. Această abordare permite simularea unor scenarii de iluminare și texturi dificil de capturat în mediul real fără echipament costisitor.
+
+**Locația codului:** `src/data_acquisition/generate_data.py`
+**Locația datelor:** `data/processed/`
+
+**Dovezi:**
+
+- Grafic comparativ: `docs/generated_vs_real.png`
+- Setup experimental: `docs/acquisition_setup.jpg` (dacă aplicabil)
+- Tabel statistici: `docs/data_statistics.csv`
+
+
+---
+
+### 3. Diagrama State Machine a Întregului Sistem (OBLIGATORIE)
+
+**Locație fișier:** `docs/state_machine.png`
+
+### Justificarea State Machine-ului ales:
+
+Am ales arhitectura de tip **Clasificare/Detecție la cerere**, specifică sistemelor de controlul calitatății de pe liniile de producție.
+
+**Stările principale sunt:**
+1. **IDLE:** Sistemul așteaptă input (încărcare imagine de către operator).
+2. **ACQUIRE_DATA/LOAD:** Se încarcă imaginea (reală sau generată) și se verifică integritatea fișierului.
+3. **PREPROCESS:** Redimensionare la 640x640 (format YOLO) și normalizare pixelilor.
+4. **INFERENCE (RN):** Modelul YOLOv8 procesează imaginea pentru a identifica coordonatele defectelor.
+5. **DECISION:** Se verifică dacă scorul de încredere (confidence) este peste pragul setat (0.5).
+   - Dacă **DA (Defect găsit):** Se trece în starea ALERT/LOG.
+   - Dacă **NU (Curat):** Se trece în starea PASS.
+
+**Tranzițiile critice sunt:**
+- **PREPROCESS → ERROR:** Dacă imaginea este coruptă sau formatul nu este suportat.
+- **INFERENCE → ALERT:** Critică pentru siguranță; declanșează marcarea vizuală a defectului pe UI.
+
+Starea **ERROR** este esențială deoarece API-urile de generare pot da timeout sau utilizatorul poate încărca fișiere non-imagine, iar aplicația nu trebuie să se blocheze (crash), ci să revină în IDLE.
+
+---
+
+### 4. Scheletul complet al celor 3 Module
+
+| **Modul** | **Tehnologie** | **Status Etapa 4** |
+|-----------|----------------|--------------------|
+| **1. Data Acquisition** | Python (`google-genai`, `PIL`) | **Funcțional.** Scriptul se conectează la API, generează imagini pe baza prompt-ului și le salvează local cu timestamp. |
+| **2. Neural Network** | Python (`ultralytics` YOLOv8) | **Funcțional.** Arhitectura este definită (YOLOv8n), fișierul de config `data.yaml` este creat, antrenamentul poate fi inițiat. |
+| **3. Web Service / UI** | Python (`matplotlib`/`opencv` sau Streamlit) | **Funcțional.** Script de inferență care ia o imagine, rulează modelul și afișează rezultatul cu bounding boxes. |
+
+---
+
+## Structura Repository-ului la Finalul Etapei 4
+
+```text
+detectie-defecte-suprafata/
+├── data/
+|   ├── processed/
+    |   ├── train
+    |   ├── validation
+│   ├── raw/                  # Dataset NEU-DET original
+│   ├── generated/            # Imagini create cu scriptul GenAI (Contribuție proprie)
+│   └── data.yaml             # Configurare pentru YOLO
+├── src/
+│   ├── data_acquisition/
+│   │   ├── generate_data.py  # Scriptul de generare imagini (Modul 1)
+│   │   └── check_models.py   # Utilitar verificare API
+│   └── neural_network/
+│       ├── train_yolo.py     # Script antrenament (Modul 2)
+│       ├── detect.py         # Script inferență
+│       └── main.py           # Entry point aplicatie (Modul 3)
+├── docs/
+│   └── state_machine.png     # Diagrama stărilor
+├── models/
+│   └── yolov8n.pt            # Modelul (pre-trained sau fine-tuned)
+├── README.md                 # Fișier README
+├── requirements.txt          # Dependențe (ultralytics, google-genai, pillow)
+└── .env                      # API Keys (ignorat de git)
+
