@@ -1,0 +1,14 @@
+# Paths - Update 'path' to be the absolute path to your project root if relative paths fail
+path: ../../data/raw  # relative to where you run the training script
+train: train/images
+val: validation/images
+
+# Classes
+nc: 6  # number of classes
+names:
+  0: crazing
+  1: inclusion
+  2: patches
+  3: pitted_surface
+  4: rolled-in_scale
+  5: scratches
