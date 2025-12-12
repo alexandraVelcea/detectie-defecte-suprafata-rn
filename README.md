@@ -1,5 +1,7 @@
 # detectie-defecte-suprafata-rn
 
+# !!! Cel mai nou branch este ui
+
 # Analiza și Pregătirea Setului de Date pentru Rețele Neuronale
 
 **Disciplina:** Rețele Neuronale
