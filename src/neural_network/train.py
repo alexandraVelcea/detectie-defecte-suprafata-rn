@@ -16,7 +16,7 @@ def train_model():
     # 3. Train
     results = model.train(
         data=yaml_path,
-        epochs=50,          # 50-100 epochs is usually good for this size dataset
+        epochs=100,          # 50-100 epochs is usually good for this size dataset
         imgsz=200,          # Match your image size (from XML/augmentation script)
         batch=16,           # Reduce to 8 or 4 if you run out of GPU memory
         name='defect_detector', # Name of the run folder
