@@ -2,9 +2,11 @@
 
 # Analiza și Pregătirea Setului de Date pentru Rețele Neuronale
 
-**Disciplina:** Rețele Neuronale  
-**Instituție:** POLITEHNICA București – FIIR  
-**Student:** Velcea Alexandra 
+**Disciplina:** Rețele Neuronale
+**Instituție:** POLITEHNICA București – FIIR
+**Student:** Velcea Alexandra
+**Link Repository GitHub:** https://github.com/alexandraVelcea/detectie-defecte-suprafata-rn
+**Data:** 05.12.2024
 
 ---
 
@@ -41,27 +43,30 @@ project-name/
 
 ### 2.1 Sursa datelor
 
-* **Origine:** Datele sunt generate de Gemini AI Pro - imagini de defecte de suprafață.
+* **Origine:** Datele sunt preluate din setul de date public NEU-DET, respectiv generate folosind librăria Pillow.
 * **Modul de achiziție:** Generare programatică
 * **Perioada / condițiile colectării:** Decembrie 2025
 
 ### 2.2 Caracteristicile dataset-ului
 
-* **Număr total de observații:** [Ex: 15,000]
-* **Număr de caracteristici (features):** [Ex: 12]
+* **Număr total de observații:** 
+* **Număr de caracteristici (features):** 6
 * **Tipuri de date:** Imagini
 * **Format fișiere:** PNG
 
-### 2.3 Descrierea fiecărei caracteristici
+### Tabelul Caracteristicilor Dataset-ului NEU-DET
 
 | **Caracteristică** | **Tip** | **Unitate** | **Descriere** | **Domeniu valori** |
-|-------------------|---------|-------------|---------------|--------------------|
-| feature_1 | numeric | mm | [...] | 0–150 |
-| feature_2 | categorial | – | [...] | {A, B, C} |
-| feature_3 | numeric | m/s | [...] | 0–2.5 |
-| ... | ... | ... | ... | ... |
+|:---|:---|:---|:---|:---|
+| **Image Resolution** | numeric | pixeli | Dimensiunea spațială a imaginii de input (lățime × înălțime). | Fix: **200 × 200** |
+| **Pixel Intensity** | numeric | – | Valoarea de intensitate a fiecărui pixel (Grayscale), reprezentând luminozitatea suprafeței metalice. | **0 – 255** (8-bit integer) |
+| **Defect Class** | categorial | – | Tipul defectului identificat pe suprafața metalică (Target Variable). | **{crazing, inclusion, patches, pitted_surface, rolled-in_scale, scratches}** |
+| **BBox_Center_X** | numeric | pixeli (sau norm) | Coordonata orizontală a centrului defectului detectat. | **0 – 200** (sau 0.0 – 1.0 normalizat) |
+| **BBox_Center_Y** | numeric | pixeli (sau norm) | Coordonata verticală a centrului defectului detectat. | **0 – 200** (sau 0.0 – 1.0 normalizat) |
+| **BBox_Width** | numeric | pixeli (sau norm) | Lățimea dreptunghiului care încadrează defectul (bounding box). | **0 – 200** |
+| **BBox_Height** | numeric | pixeli (sau norm) | Înălțimea dreptunghiului care încadrează defectul. | **0 – 200** |
 
-**Fișier recomandat:**  `data/README.md`
+**Fișier:**  `data/README.md`
 
 ---
 
@@ -120,7 +125,6 @@ project-name/
 
 * Date preprocesate în `data/processed/`
 * Seturi train/val/test în foldere dedicate
-* Parametrii de preprocesare în `config/preprocessing_config.*` (opțional)
 
 ---
 
@@ -136,9 +140,9 @@ project-name/
 
 ##  6. Stare Etapă (de completat de student)
 
-- [ ] Structură repository configurată
+- [x] Structură repository configurată
 - [ ] Dataset analizat (EDA realizată)
-- [ ] Date preprocesate
+- [x] Date preprocesate
 - [ ] Seturi train/val/test generate
 - [ ] Documentație actualizată în README + `data/README.md`
 
@@ -146,12 +150,6 @@ project-name/
 
 
 # 📘 README – Etapa 4: Arhitectura Completă a Aplicației SIA bazată pe Rețele Neuronale
-
-**Disciplina:** Rețele Neuronale
-**Instituție:** POLITEHNICA București – FIIR
-**Student:** Velcea Alexandra
-**Link Repository GitHub:** https://github.com/alexandraVelcea/detectie-defecte-suprafata-rn
-**Data:** 05.12.2024
 
 ---
 
@@ -189,12 +187,12 @@ Trebuie să livrați un SCHELET COMPLET și FUNCȚIONAL al întregului Sistem cu
 [ ] Date generate prin simulare fizică
 [ ] Date achiziționate cu senzori proprii
 [ ] Etichetare/adnotare manuală
-[x] **Date sintetice prin Generative AI**
+[x] **Date sintetice generate prin Pillow**
 
 **Descriere detaliată:**
-Pentru a compensa lipsa de diversitate în dataset-urile publice (precum NEU-DET) și pentru a evita overfitting-ul, am dezvoltat un modul de generare a datelor sintetice folosind **Google GenAI SDK (modelul `imagen-3.0`)**.
+Pentru a compensa lipsa de diversitate în dataset-urile publice (precum NEU-DET), am dezvoltat un modul de generare a datelor sintetice folosind librăria Python **Pillow**.
 
-Scriptul Python (`generate_data.py`) utilizează prompt-uri inginerești specifice (ex: *"industrial metal surface with deep rust and scratches, isometric view, photorealistic"*) pentru a crea variații unice ale defectelor. Aceste imagini sunt salvate automat, verificate și vor fi integrate în pipeline-ul de antrenare alături de datele reale. Această abordare permite simularea unor scenarii de iluminare și texturi dificil de capturat în mediul real fără echipament costisitor.
+Scriptul Python `generate_data.py` utilizează librăria Pillow pentru a augmenta o parte din imaginile deja existente în setul de date. Aceste imagini sunt salvate automat, verificate și vor fi integrate în pipeline-ul de antrenare alături de datele reale. Această abordare permite simularea unor scenarii de iluminare și texturi dificil de capturat în mediul real fără echipament costisitor.
 
 **Locația codului:** `src/data_acquisition/generate_data.py`
 **Locația datelor:** `data/processed/`
@@ -204,7 +202,6 @@ Scriptul Python (`generate_data.py`) utilizează prompt-uri inginerești specifi
 - Grafic comparativ: `docs/generated_vs_real.png`
 - Setup experimental: `docs/acquisition_setup.jpg` (dacă aplicabil)
 - Tabel statistici: `docs/data_statistics.csv`
-
 
 ---
 
@@ -218,20 +215,18 @@ Am ales arhitectura de tip **Clasificare/Detecție la cerere**, specifică siste
 
 **Stările principale sunt:**
 **!!! DE EDTIAT !!!**
-**CASE VALIDARE DATE + CASE AFISARE REZULTATE**
 1. **IDLE:** Sistemul așteaptă input (încărcare imagine de către operator).
-2. **ACQUIRE_DATA/LOAD:** Se încarcă imaginea (reală sau generată) și se verifică integritatea fișierului.
-3. **PREPROCESS:** Redimensionare la 640x640 (format YOLO) și normalizare pixelilor.
-4. **INFERENCE (RN):** Modelul YOLOv8 procesează imaginea pentru a identifica coordonatele defectelor.
-5. **DECISION:** Se verifică dacă scorul de încredere (confidence) este peste pragul setat (0.5).
-   - Dacă **DA (Defect găsit):** Se trece în starea ALERT/LOG.
-   - Dacă **NU (Curat):** Se trece în starea PASS.
+2. **ACQUIRE_DATA:** Se încarcă imaginea (reală sau generată) și se verifică integritatea fișierului.
+3. **PREPROCESS:** Ștergerea datelor de la ultima rulare.
+4. **IS_VALID:** Verificarea vlidității datelor.
+5. **INFERENCE (RN):** Modelul YOLOv8 procesează imaginea pentru a identifica coordonatele defectelor.
+6. **DEFECT_NOT_FOUND:** Nu a fost găsit un defect.
+7. **CLASSIFY_DEFECT:** Clasifică defectul.
+8. **INVALID:** Imaginea nu este validă; se revine în starea IDLE.
+9. **GENERATE RESULTS:** Se generează rezultate statistice. 
 
-**Tranzițiile critice sunt:**
-- **PREPROCESS → ERROR:** Dacă imaginea este coruptă sau formatul nu este suportat.
-- **INFERENCE → ALERT:** Critică pentru siguranță; declanșează marcarea vizuală a defectului pe UI.
-
-Starea **ERROR** este esențială deoarece API-urile de generare pot da timeout sau utilizatorul poate încărca fișiere non-imagine, iar aplicația nu trebuie să se blocheze (crash), ci să revină în IDLE.
+**Tranziția critică sunt:**
+- **INVALID → IDLE:** Dacă imaginea este coruptă sau formatul nu este suportat.
 
 ---
 
@@ -275,20 +270,6 @@ detectie-defecte-suprafata/
 
 
 # 📘 README – Etapa 5: Configurarea și Antrenarea Modelului RN
-
-  
-
-**Disciplina:** Rețele Neuronale
-
-**Instituție:** POLITEHNICA București – FIIR
-
-**Student:** Velcea Alexandra
-
-**Link Repository GitHub:** [URL complet]
-
-**Data predării:** [Data]
-
-  
 
 ---
 
@@ -401,22 +382,6 @@ python  src/preprocessing/data_splitter.py  --stratify  --random_state  42
 - Aceiași proporții split: 70% train / 15% validation / 15% test
 
 - Același `random_state=42` pentru reproducibilitate
-
-  
-
-**Verificare rapidă:**
-
-```python
-
-import pandas as pd
-
-train = pd.read_csv('data/train/X_train.csv')
-
-print(f"Train samples: {len(train)}") # Trebuie să includă date noi
-
-```
-
-  
 
 ---
 
