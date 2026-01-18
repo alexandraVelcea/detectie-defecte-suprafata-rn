@@ -1,164 +1,113 @@
 import os
 import random
+import shutil
 import numpy as np
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from PIL import Image, ImageEnhance, ImageDraw, ImageFilter
 
 # --- CONFIGURATION ---
-DATA_ROOT = Path(__file__).resolve().parent.parent.parent / "data" / "raw"
-TRAIN_IMG_DIR = DATA_ROOT / "train" / "images"
-VAL_IMG_DIR = DATA_ROOT / "validation" / "images"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
-# XML Folders (Source for reading old boxes, Destination for writing new combined boxes)
-TRAIN_XML_DIR = DATA_ROOT / "train" / "annotations"
-VAL_XML_DIR = DATA_ROOT / "validation" / "annotations"
+# Input Paths (Raw Data)
+RAW_TRAIN_IMG_DIR = PROJECT_ROOT / "data" / "raw" / "train" / "images"
+RAW_TRAIN_XML_DIR = PROJECT_ROOT / "data" / "raw" / "train" / "annotations"
+RAW_VAL_IMG_DIR   = PROJECT_ROOT / "data" / "raw" / "validation" / "images"
+RAW_VAL_XML_DIR   = PROJECT_ROOT / "data" / "raw" / "validation" / "annotations"
 
-TARGET_COUNTS = {
-    "train": 40,
-    "validation": 15
-}
+# Final Output Paths
+FINAL_TRAIN_IMG_DIR = PROJECT_ROOT / "data" / "train" / "images"
+FINAL_TRAIN_XML_DIR = PROJECT_ROOT / "data" / "train" / "annotations"
+FINAL_VAL_IMG_DIR   = PROJECT_ROOT / "data" / "validation" / "images"
+FINAL_VAL_XML_DIR   = PROJECT_ROOT / "data" / "validation" / "annotations"
+FINAL_TEST_IMG_DIR  = PROJECT_ROOT / "data" / "test" / "images"
+FINAL_TEST_XML_DIR  = PROJECT_ROOT / "data" / "test" / "annotations"
+
+# Counts
+MOVE_FROM_TRAIN_TO_POOL = 30   # Move 30 from Train to "Pool"
+TARGET_VAL_COUNT        = 45   # Final Count for Validation
+TARGET_TEST_COUNT       = 45   # Final Count for Test
+AUGMENT_IN_TRAIN        = 105  # Images to process in Train
 
 CATEGORIES = [
-    'crazing', 'inclusion', 'patches',
+    'crazing', 'inclusion', 'patches', 
     'pitted_surface', 'rolled-in_scale', 'scratches'
 ]
 
-# --- XML HANDLING HELPERS ---
+# --- XML UTILS ---
+def get_boxes_from_xml(xml_path):
+    boxes = []
+    if xml_path.exists():
+        try:
+            tree = ET.parse(xml_path)
+            root = tree.getroot()
+            for obj in root.findall('object'):
+                bbox = obj.find('bndbox')
+                if bbox is not None:
+                    boxes.append((
+                        int(float(bbox.find('xmin').text)),
+                        int(float(bbox.find('ymin').text)),
+                        int(float(bbox.find('xmax').text)),
+                        int(float(bbox.find('ymax').text))
+                    ))
+        except: pass
+    return boxes
 
-def get_original_boxes(image_filename, original_xml_dir):
-    """
-    Tries to find the original XML file and returns a list of existing bounding boxes.
-    Returns: [(xmin, ymin, xmax, ymax), ...]
-    """
-    existing_boxes = []
-    
-    # Assumption: XML has same name as image but .xml extension
-    xml_filename = os.path.splitext(image_filename)[0] + ".xml"
-    xml_path = original_xml_dir / xml_filename
-    
-    if not xml_path.exists():
-        # Fallback: Sometimes annotations are inside subfolders matching categories
-        # We try to search recursively or check category subfolders if needed
-        # For now, we return empty if not found immediately
-        return []
-        
-    try:
-        tree = ET.parse(xml_path)
-        root = tree.getroot()
-        
-        for obj in root.findall('object'):
-            bbox = obj.find('bndbox')
-            if bbox is not None:
-                xmin = int(float(bbox.find('xmin').text))
-                ymin = int(float(bbox.find('ymin').text))
-                xmax = int(float(bbox.find('xmax').text))
-                ymax = int(float(bbox.find('ymax').text))
-                existing_boxes.append((xmin, ymin, xmax, ymax))
-                
-    except Exception as e:
-        print(f"Warning: Could not parse original XML {xml_path}: {e}")
-        
-    return existing_boxes
-
-def create_xml_content(filename, folder_name, width, height, class_name, bboxes):
-    """Generates the content string for a Pascal VOC XML file."""
-    xml_content = [
+def create_xml_content(filename, width, height, class_name, bboxes):
+    xml = [
         "<annotation>",
-        f"    <folder>{folder_name}</folder>",
         f"    <filename>{filename}</filename>",
-        "    <source>",
-        "        <database>Synthetic_Augmentation</database>",
-        "    </source>",
-        "    <size>",
-        f"        <width>{width}</width>",
-        f"        <height>{height}</height>",
-        "        <depth>3</depth>",
-        "    </size>",
+        f"    <size><width>{width}</width><height>{height}</height><depth>3</depth></size>",
         "    <segmented>0</segmented>"
     ]
-    
     for (xmin, ymin, xmax, ymax) in bboxes:
-        # Clamp coordinates
-        xmin = max(0, min(xmin, width - 1))
-        ymin = max(0, min(ymin, height - 1))
-        xmax = max(0, min(xmax, width - 1))
-        ymax = max(0, min(ymax, height - 1))
-        
-        if xmin >= xmax or ymin >= ymax:
-            continue
-            
-        xml_content.extend([
-            "    <object>",
-            f"        <name>{class_name}</name>",
-            "        <pose>Unspecified</pose>",
-            "        <truncated>0</truncated>",
-            "        <difficult>0</difficult>",
-            "        <bndbox>",
-            f"            <xmin>{int(xmin)}</xmin>",
-            f"            <ymin>{int(ymin)}</ymin>",
-            f"            <xmax>{int(xmax)}</xmax>",
-            f"            <ymax>{int(ymax)}</ymax>",
-            "        </bndbox>",
-            "    </object>"
-        ])
-        
-    xml_content.append("</annotation>")
-    return "\n".join(xml_content)
+        xmin, xmax = max(0, xmin), min(width, xmax)
+        ymin, ymax = max(0, ymin), min(height, ymax)
+        xml.append(f"    <object><name>{class_name}</name><bndbox><xmin>{int(xmin)}</xmin><ymin>{int(ymin)}</ymin><xmax>{int(xmax)}</xmax><ymax>{int(ymax)}</ymax></bndbox></object>")
+    xml.append("</annotation>")
+    return "\n".join(xml)
 
-# --- DEFECT SIMULATION FUNCTIONS ---
+# --- DEFECT SIMULATORS ---
+def general_augmentations(img):
+    enhancer = ImageEnhance.Brightness(img)
+    img = enhancer.enhance(random.uniform(0.8, 1.2))
+    enhancer = ImageEnhance.Contrast(img)
+    img = enhancer.enhance(random.uniform(0.9, 1.3))
+    return img
 
 def simulate_scratches(img):
     draw = ImageDraw.Draw(img)
     width, height = img.size
     bboxes = []
-    
     for _ in range(random.randint(3, 7)):
-        x1 = random.randint(0, width)
-        y1 = random.randint(0, height)
+        x1, y1 = random.randint(0, width), random.randint(0, height)
         length = random.randint(30, 100)
-        angle = random.uniform(0, 2 * 3.14159)
+        angle = random.uniform(0, 2 * np.pi)
         x2 = x1 + length * np.cos(angle)
         y2 = y1 + length * np.sin(angle)
-        
         color = random.randint(150, 255)
-        thickness = random.randint(1, 3)
-        draw.line([(x1, y1), (x2, y2)], fill=(color, color, color), width=thickness)
-        
+        draw.line([(x1, y1), (x2, y2)], fill=(color, color, color), width=random.randint(1, 3))
         pad = 5
         xmin, xmax = sorted([x1, x2])
         ymin, ymax = sorted([y1, y2])
         bboxes.append((xmin - pad, ymin - pad, xmax + pad, ymax + pad))
-        
     return img, bboxes
 
 def simulate_pitted_surface(img):
     draw = ImageDraw.Draw(img)
     width, height = img.size
     bboxes = []
-
-    for _ in range(random.randint(8, 15)):
-        center_x = random.randint(0, width)
-        center_y = random.randint(0, height)
-        c_xmin, c_ymin = center_x, center_y
-        c_xmax, c_ymax = center_x, center_y
-
-        for _ in range(random.randint(30, 70)):
-            offset_x = random.randint(-40, 40)
-            offset_y = random.randint(-40, 40)
-            pt_x, pt_y = center_x + offset_x, center_y + offset_y
-            
-            c_xmin = min(c_xmin, pt_x)
-            c_ymin = min(c_ymin, pt_y)
-            c_xmax = max(c_xmax, pt_x)
-            c_ymax = max(c_ymax, pt_y)
-
-            color = random.randint(0, 30)
-            radius = random.randint(1, 2)
-            draw.ellipse([pt_x, pt_y, pt_x+radius, pt_y+radius], fill=(color, color, color))
-            
+    for _ in range(random.randint(5, 12)):
+        cx, cy = random.randint(0, width), random.randint(0, height)
+        c_xmin, c_ymin, c_xmax, c_ymax = cx, cy, cx, cy
+        for _ in range(random.randint(20, 50)):
+            ox, oy = random.randint(-30, 30), random.randint(-30, 30)
+            px, py = cx + ox, cy + oy
+            c_xmin, c_ymin = min(c_xmin, px), min(c_ymin, py)
+            c_xmax, c_ymax = max(c_xmax, px), max(c_ymax, py)
+            color = random.randint(0, 50)
+            draw.ellipse([px, py, px+random.randint(1,2), py+random.randint(1,2)], fill=(color, color, color))
         bboxes.append((c_xmin, c_ymin, c_xmax, c_ymax))
-        
     return img, bboxes
 
 def simulate_patches(img):
@@ -166,21 +115,13 @@ def simulate_patches(img):
     draw = ImageDraw.Draw(overlay)
     width, height = img.size
     bboxes = []
-
     for _ in range(random.randint(1, 3)):
-        x = random.randint(0, width)
-        y = random.randint(0, height)
-        r = random.randint(40, 100) 
-
-        if random.random() > 0.5:
-            color = (0, 0, 0, random.randint(50, 100)) 
-        else:
-            color = (200, 200, 200, random.randint(30, 80)) 
-
+        x, y = random.randint(0, width), random.randint(0, height)
+        r = random.randint(30, 80)
+        color = (0, 0, 0, random.randint(50, 100)) if random.random() > 0.5 else (200, 200, 200, random.randint(30, 80))
         draw.ellipse([x-r, y-r, x+r, y+r], fill=color)
         bboxes.append((x-r, y-r, x+r, y+r))
-
-    overlay = overlay.filter(ImageFilter.GaussianBlur(radius=15))
+    overlay = overlay.filter(ImageFilter.GaussianBlur(radius=10))
     img = img.convert("RGBA")
     img = Image.alpha_composite(img, overlay)
     return img.convert("RGB"), bboxes
@@ -190,36 +131,12 @@ def simulate_inclusion(img):
     draw = ImageDraw.Draw(overlay)
     width, height = img.size
     bboxes = []
-
     for _ in range(random.randint(1, 3)):
-        center_x = random.randint(20, width-20)
-        center_y = random.randint(50, height-100)
-        c_xmin, c_ymin = center_x, center_y
-        c_xmax, c_ymax = center_x, center_y
-
-        num_streaks = random.randint(5, 15)
-        for _ in range(num_streaks):
-            offset_x = random.randint(-15, 15)
-            offset_y = random.randint(-30, 30)
-            start_x = center_x + offset_x
-            start_y = center_y + offset_y
-            length = random.randint(20, 60)
-            end_x = start_x + random.randint(-2, 2)
-            end_y = start_y + length
-
-            c_xmin = min(c_xmin, start_x, end_x)
-            c_ymin = min(c_ymin, start_y, end_y)
-            c_xmax = max(c_xmax, start_x, end_x)
-            c_ymax = max(c_ymax, start_y, end_y)
-
-            thickness = random.randint(2, 5)
-            alpha = random.randint(100, 180)
-            color = (random.randint(20, 50), random.randint(20, 50), random.randint(20, 50), alpha)
-            draw.line([(start_x, start_y), (end_x, end_y)], fill=color, width=thickness)
-            
-        bboxes.append((c_xmin, c_ymin, c_xmax, c_ymax))
-
-    overlay = overlay.filter(ImageFilter.GaussianBlur(radius=3))
+        sx, sy = random.randint(20, width-20), random.randint(20, height-20)
+        length = random.randint(15, 50)
+        ex, ey = sx + random.randint(-5, 5), sy + length
+        draw.line([(sx, sy), (ex, ey)], fill=(30, 30, 30, random.randint(100, 180)), width=random.randint(2, 4))
+        bboxes.append((min(sx, ex)-2, min(sy, ey)-2, max(sx, ex)+2, max(sy, ey)+2))
     img = img.convert("RGBA")
     img = Image.alpha_composite(img, overlay)
     return img.convert("RGB"), bboxes
@@ -229,34 +146,14 @@ def simulate_rolled_in_scale(img):
     draw = ImageDraw.Draw(overlay)
     width, height = img.size
     bboxes = []
-
-    for _ in range(random.randint(5, 10)):
-        center_x = random.randint(0, width)
-        center_y = random.randint(0, height)
-        patch_radius = random.randint(40, 100)
-        
-        bboxes.append((center_x - patch_radius, center_y - patch_radius, 
-                       center_x + patch_radius, center_y + patch_radius))
-
-        for _ in range(random.randint(50, 120)):
-            offset_x = int(random.gauss(0, patch_radius/2.5))
-            offset_y = int(random.gauss(0, patch_radius/2.5))
-            flake_x = center_x + offset_x
-            flake_y = center_y + offset_y
-            
-            flake_w = random.randint(3, 10)
-            flake_h = random.randint(3, 8)
-            color_val = random.randint(10, 50)
-            alpha = random.randint(180, 240)
-            color = (color_val, color_val, color_val, alpha)
-
-            draw.ellipse(
-                [flake_x - flake_w//2, flake_y - flake_h//2,
-                 flake_x + flake_w//2, flake_y + flake_h//2],
-                fill=color
-            )
-
-    overlay = overlay.filter(ImageFilter.GaussianBlur(radius=0.8))
+    for _ in range(random.randint(3, 6)):
+        cx, cy = random.randint(0, width), random.randint(0, height)
+        r = random.randint(20, 60)
+        bboxes.append((cx - r, cy - r, cx + r, cy + r))
+        for _ in range(random.randint(30, 80)):
+            ox, oy = int(random.gauss(0, r/3)), int(random.gauss(0, r/3))
+            val = random.randint(20, 60)
+            draw.ellipse([cx+ox, cy+oy, cx+ox+5, cy+oy+5], fill=(val, val, val, random.randint(150, 220)))
     img = img.convert("RGBA")
     img = Image.alpha_composite(img, overlay)
     return img.convert("RGB"), bboxes
@@ -265,37 +162,19 @@ def simulate_crazing(img):
     draw = ImageDraw.Draw(img)
     width, height = img.size
     bboxes = []
-    
-    center_x = random.randint(50, width-50)
-    center_y = random.randint(50, height-50)
-    curr_x, curr_y = center_x, center_y
-    min_x, min_y = curr_x, curr_y
-    max_x, max_y = curr_x, curr_y
-    
-    for _ in range(random.randint(20, 40)):
-        angle = random.uniform(0, 2 * 3.14159)
-        length = random.randint(10, 30)
-        
-        next_x = curr_x + length * np.cos(angle)
-        next_y = curr_y + length * np.sin(angle)
-        
-        draw.line([(curr_x, curr_y), (next_x, next_y)], fill=(20, 20, 20), width=1)
-        
-        min_x = min(min_x, next_x)
-        min_y = min(min_y, next_y)
-        max_x = max(max_x, next_x)
-        max_y = max(max_y, next_y)
-        curr_x, curr_y = next_x, next_y
-        
+    cx, cy = random.randint(50, width-50), random.randint(50, height-50)
+    curr_x, curr_y = cx, cy
+    min_x, min_y, max_x, max_y = cx, cy, cx, cy
+    for _ in range(random.randint(15, 30)):
+        angle = random.uniform(0, 2 * np.pi)
+        length = random.randint(5, 20)
+        nx, ny = curr_x + length * np.cos(angle), curr_y + length * np.sin(angle)
+        draw.line([(curr_x, curr_y), (nx, ny)], fill=(40, 40, 40), width=1)
+        min_x, max_x = min(min_x, nx), max(max_x, nx)
+        min_y, max_y = min(min_y, ny), max(max_y, ny)
+        curr_x, curr_y = nx, ny
     bboxes.append((min_x, min_y, max_x, max_y))
     return img, bboxes
-
-def general_augmentations(img):
-    enhancer = ImageEnhance.Brightness(img)
-    img = enhancer.enhance(random.uniform(0.8, 1.2))
-    enhancer = ImageEnhance.Contrast(img)
-    img = enhancer.enhance(random.uniform(0.9, 1.3))
-    return img
 
 DEFECT_MAP = {
     'crazing': simulate_crazing,
@@ -306,80 +185,144 @@ DEFECT_MAP = {
     'scratches': simulate_scratches
 }
 
-# --- MAIN LOOP ---
+# --- MAIN LOGIC ---
 
-def process():
-    print("Starting Synthetic Defect Generation with Combined (Old+New) Annotations...")
+def move_file_pair(filename, src_img_dir, src_xml_dir, dest_img_dir, dest_xml_dir):
+    """Safely moves an image and its XML."""
+    if not (src_img_dir / filename).exists():
+        return # Skip if source missing
 
-    for d in [TRAIN_XML_DIR, VAL_XML_DIR]:
-        if not d.exists():
-            d.mkdir(parents=True, exist_ok=True)
-            print(f"Created folder: {d}")
+    # Move Image
+    shutil.move(str(src_img_dir / filename), str(dest_img_dir / filename))
+    
+    # Move XML
+    xml_name = filename.replace(".jpg", ".xml").replace(".png", ".xml")
+    if (src_xml_dir / xml_name).exists():
+        shutil.move(str(src_xml_dir / xml_name), str(dest_xml_dir / xml_name))
 
-    for split, goal_count in TARGET_COUNTS.items():
-        img_base_dir = TRAIN_IMG_DIR if split == "train" else VAL_IMG_DIR
-        xml_base_dir = TRAIN_XML_DIR if split == "train" else VAL_XML_DIR
+def process_category(category):
+    # Current Raw Paths
+    train_cat_img_dir = RAW_TRAIN_IMG_DIR / category
+    
+    # Validation Pool Logic
+    # (Assuming raw/validation is either flat or categorized, we handle categorized for input)
+    if (RAW_VAL_IMG_DIR / category).exists():
+        val_pool_src = RAW_VAL_IMG_DIR / category
+    else:
+        val_pool_src = RAW_VAL_IMG_DIR
+
+    if not train_cat_img_dir.exists(): 
+        return
+
+    # --- STEP 1: MOVE 30 FROM TRAIN TO VAL POOL ---
+    # Identify clean originals
+    originals = [f for f in os.listdir(train_cat_img_dir) if f.lower().endswith(('.jpg', '.png')) and "aug_" not in f]
+    random.shuffle(originals)
+    
+    to_move = originals[:MOVE_FROM_TRAIN_TO_POOL]
+    print(f"[{category}] Step 1: Moving {len(to_move)} images from Train -> Raw Validation Pool.")
+    
+    # Staging area for pool (temp use raw/validation/category)
+    (RAW_VAL_IMG_DIR / category).mkdir(parents=True, exist_ok=True)
+    
+    for f in to_move:
+        move_file_pair(f, train_cat_img_dir, RAW_TRAIN_XML_DIR, RAW_VAL_IMG_DIR / category, RAW_VAL_XML_DIR)
+
+    # --- STEP 2: SPLIT TOTAL POOL (45 Val / 45 Test) ---
+    pool_dir = RAW_VAL_IMG_DIR / category
+    pool_files = [f for f in os.listdir(pool_dir) if f.lower().endswith(('.jpg', '.png'))]
+    random.shuffle(pool_files)
+    
+    if len(pool_files) < (TARGET_VAL_COUNT + TARGET_TEST_COUNT):
+        print(f"Warning: Total pool for {category} is {len(pool_files)}. Splitting 50/50.")
+        val_set = pool_files[:len(pool_files)//2]
+        test_set = pool_files[len(pool_files)//2:]
+    else:
+        val_set = pool_files[:TARGET_VAL_COUNT]
+        test_set = pool_files[TARGET_VAL_COUNT : TARGET_VAL_COUNT + TARGET_TEST_COUNT]
+
+    print(f"[{category}] Step 2: Splitting Pool ({len(pool_files)}) -> {len(val_set)} Validation, {len(test_set)} Test.")
+
+    for f in val_set:
+        move_file_pair(f, pool_dir, RAW_VAL_XML_DIR, FINAL_VAL_IMG_DIR, FINAL_VAL_XML_DIR)
         
-        print(f"\n=== Processing {split.upper()} set (Target: {goal_count} new per class) ===")
+    for f in test_set:
+        move_file_pair(f, pool_dir, RAW_VAL_XML_DIR, FINAL_TEST_IMG_DIR, FINAL_TEST_XML_DIR)
 
-        for category in CATEGORIES:
-            img_cat_path = img_base_dir / category
+    # --- STEP 3: AUGMENT REMAINING TRAIN ---
+    remaining_train = [f for f in os.listdir(train_cat_img_dir) if f.lower().endswith(('.jpg', '.png')) and "aug_" not in f]
+    to_augment = remaining_train[:AUGMENT_IN_TRAIN]
+    
+    print(f"[{category}] Step 3: Augmenting {len(to_augment)} images in Train.")
+
+    for i, filename in enumerate(to_augment):
+        try:
+            file_path = train_cat_img_dir / filename
+            xml_path = RAW_TRAIN_XML_DIR / filename.replace(".jpg", ".xml")
             
-            if not img_cat_path.exists():
-                print(f"Skipping {category} (path not found)")
-                continue
+            with Image.open(file_path) as img:
+                img = img.convert("RGB")
+                old_boxes = get_boxes_from_xml(xml_path)
                 
-            existing_files = [f for f in os.listdir(img_cat_path) if f.endswith(('.jpg', '.png')) and "aug_" not in f]
+                defect_func = DEFECT_MAP.get(category, simulate_scratches)
+                img_def, new_boxes = defect_func(img)
+                final_img = general_augmentations(img_def)
+                
+                aug_name = f"aug_{category}_{i}_{random.randint(100,999)}.jpg"
+                final_img.save(train_cat_img_dir / aug_name)
+                
+                all_boxes = old_boxes + new_boxes
+                aug_xml_content = create_xml_content(aug_name, final_img.width, final_img.height, category, all_boxes)
+                with open(RAW_TRAIN_XML_DIR / aug_name.replace(".jpg", ".xml"), "w") as f:
+                    f.write(aug_xml_content)
             
-            if not existing_files:
-                print(f"No original images found in {category}")
-                continue
+            # Delete Original
+            os.remove(file_path)
+            if xml_path.exists():
+                os.remove(xml_path)
 
-            selected_files = random.choices(existing_files, k=goal_count)
-            print(f"   Generating {goal_count} augmented images for {category}...")
-            
-            for i, filename in enumerate(selected_files):
-                try:
-                    img_path = img_cat_path / filename
-                    with Image.open(img_path) as img:
-                        img = img.convert("RGB")
-                        
-                        # 1. READ OLD ANNOTATIONS
-                        original_bboxes = get_original_boxes(filename, xml_base_dir)
-                        
-                        # 2. CREATE NEW DEFECTS
-                        new_bboxes = []
-                        if category in DEFECT_MAP:
-                            img, new_bboxes = DEFECT_MAP[category](img)
-                            
-                        # 3. APPLY GENERAL AUGMENTATIONS
-                        img = general_augmentations(img)
-                        
-                        # 4. MERGE BOXES
-                        all_bboxes = original_bboxes + new_bboxes
-                        
-                        # Save Image
-                        new_filename = f"aug_{split}_{category}_{i}_{int(random.random()*10000)}.jpg"
-                        img.save(img_cat_path / new_filename, quality=95)
-                        
-                        # Save XML
-                        xml_filename = new_filename.replace(".jpg", ".xml")
-                        xml_content = create_xml_content(
-                            new_filename, 
-                            category, 
-                            img.width, 
-                            img.height, 
-                            category, 
-                            all_bboxes
-                        )
-                        
-                        with open(xml_base_dir / xml_filename, "w") as f:
-                            f.write(xml_content)
-                        
-                except Exception as e:
-                    print(f"Error processing {filename}: {e}")
+        except Exception as e:
+            print(f"Error augmenting {filename}: {e}")
 
-    print("\nDone! Images saved. Annotations merged (Old+New) and saved.")
+    # --- STEP 4: FLATTEN TO FINAL TRAIN FOLDER ---
+    # Move all files (which are now only augmented/valid training data) from raw/train/cat -> final/train
+    print(f"[{category}] Step 4: Moving & Flattening to {FINAL_TRAIN_IMG_DIR}")
+    
+    # Re-scan for all images in this category folder (should be mostly augmented ones now)
+    all_final_files = [f for f in os.listdir(train_cat_img_dir) if f.lower().endswith(('.jpg', '.png'))]
+    
+    for f in all_final_files:
+        move_file_pair(f, train_cat_img_dir, RAW_TRAIN_XML_DIR, FINAL_TRAIN_IMG_DIR, FINAL_TRAIN_XML_DIR)
+
+    # Optional: Remove empty category folder in raw/train
+    try:
+        os.rmdir(train_cat_img_dir)
+    except: pass
+
+def main():
+    # 1. Create Final Output Directories
+    for d in [FINAL_TRAIN_IMG_DIR, FINAL_TRAIN_XML_DIR, 
+              FINAL_VAL_IMG_DIR, FINAL_VAL_XML_DIR, 
+              FINAL_TEST_IMG_DIR, FINAL_TEST_XML_DIR]:
+        d.mkdir(parents=True, exist_ok=True)
+    
+    # Ensure intermediate staging exists
+    RAW_VAL_XML_DIR.mkdir(parents=True, exist_ok=True)
+
+    # 2. Process Each Category
+    for cat in CATEGORIES:
+        process_category(cat)
+
+    # 3. Cleanup Raw Train Root if empty
+    try:
+        if RAW_TRAIN_IMG_DIR.exists() and not any(RAW_TRAIN_IMG_DIR.iterdir()):
+             os.rmdir(RAW_TRAIN_IMG_DIR)
+    except: pass
+
+    print("\nProcess Complete!")
+    print(f"Train (Flattened): {FINAL_TRAIN_IMG_DIR}")
+    print(f"Validation:        {FINAL_VAL_IMG_DIR}")
+    print(f"Test:              {FINAL_TEST_IMG_DIR}")
 
 if __name__ == "__main__":
-    process()
+    main()

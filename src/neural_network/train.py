@@ -1,30 +1,31 @@
 from ultralytics import YOLO
-import os
+from pathlib import Path
+
+# --- CONFIGURATION ---
+# Define path to the data.yaml created by the previous script
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+YAML_PATH = PROJECT_ROOT / "data" / "data.yaml"
 
 def train_model():
-    # 1. Load the model
-    # 'yolov8n.pt' is the Nano model (fastest). 
-    # Use 'yolov8m.pt' (Medium) if you have a powerful GPU and want higher accuracy.
+    print(f"Loading configuration from: {YAML_PATH}")
+    
+    # 1. Load the model (Nano version for speed)
     model = YOLO('yolov8n.pt') 
     
-    # 2. Define path to yaml config
-    # Ensure this path is correct relative to where you run this script
-    yaml_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../preprocessing/data.yaml'))
-
-    print(f"Starting training using config: {yaml_path}")
-
-    # 3. Train
+    # 2. Train
     results = model.train(
-        data=yaml_path,
-        epochs=100,          # 50-100 epochs is usually good for this size dataset
-        imgsz=200,          # Match your image size (from XML/augmentation script)
-        batch=16,           # Reduce to 8 or 4 if you run out of GPU memory
-        name='defect_detector', # Name of the run folder
-        device='0'          # Use '0' for GPU, 'cpu' for CPU
-        # workers=0         # Uncomment if you get "DataLoader" errors on Windows
+        data=str(YAML_PATH),
+        epochs=100,             # Adjustable: 50-100 is standard
+        imgsz=200,              # Must match the size of your images
+        batch=16,               # Batch size (lower if GPU memory error)
+        name='defect_detector', # Save results in runs/detect/defect_detector
+        patience=15,            # Early stopping
+        device=0,               # '0' for GPU, 'cpu' for CPU
+        workers=0               # Fix for Windows process errors
     )
     
-    print("Training Complete. Model saved in 'runs/detect/defect_detector/weights/best.pt'")
+    print("\nTraining Complete.")
+    print(f"   Best weights saved at: {PROJECT_ROOT}/runs/detect/defect_detector/weights/best.pt")
 
 if __name__ == '__main__':
     train_model()
