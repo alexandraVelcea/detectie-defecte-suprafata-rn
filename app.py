@@ -25,8 +25,7 @@ font_scale = st.sidebar.slider("Dimensiune Text", 0.3, 2.0, 0.6)
 def load_model():
     # Exemplu de cai posibile
     possible_paths = [
-        "runs/detect/surface_defect_model4/weights/best.pt",
-        "runs/detect/surface_defect_model/weights/best.pt",
+        "runs/detect/defect_detector_HD/weights/best.pt",
         "yolov8n.pt" # Fallback pentru testare rapida daca nu ai modelul custom
     ]
 

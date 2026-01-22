@@ -1,31 +1,42 @@
 from ultralytics import YOLO
 from pathlib import Path
+import sys
 
 # --- CONFIGURATION ---
-# Define path to the data.yaml created by the previous script
+# Calculates the root folder relative to where this script is located
+# Adjust .parent count depending on your folder structure
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 YAML_PATH = PROJECT_ROOT / "data" / "data.yaml"
 
 def train_model():
+    # 1. Verify the data file exists before starting
+    if not YAML_PATH.exists():
+        print(f"ERROR: Could not find data.yaml at: {YAML_PATH}")
+        print("   Check your 'PROJECT_ROOT' depth or file location.")
+        sys.exit(1)
+
     print(f"Loading configuration from: {YAML_PATH}")
     
-    # 1. Load the model (Nano version for speed)
+    # Load the model
     model = YOLO('yolov8n.pt') 
-    
-    # 2. Train
-    results = model.train(
-        data=str(YAML_PATH),
-        epochs=100,             # Adjustable: 50-100 is standard
-        imgsz=200,              # Must match the size of your images
-        batch=16,               # Batch size (lower if GPU memory error)
-        name='defect_detector', # Save results in runs/detect/defect_detector
-        patience=15,            # Early stopping
-        device=0,               # '0' for GPU, 'cpu' for CPU
-        workers=0               # Fix for Windows process errors
+
+    # Train
+    model.train(
+        data=str(YAML_PATH),    # <--- USE THE FIXED PATH VARIABLE HERE
+        epochs=100,
+        imgsz=832,
+        batch=2,                # Very low. If you have a decent GPU, try 4 or 8.
+        name="defect_detector_HD",
+        patience=20,
+        device=0,
+        workers=0,              # Good for Windows stability
+        cache=False,
+        amp=False,
+        exist_ok=True           # Overwrites the folder instead of creating ...HD2, ...HD3
     )
     
     print("\nTraining Complete.")
-    print(f"   Best weights saved at: {PROJECT_ROOT}/runs/detect/defect_detector/weights/best.pt")
 
 if __name__ == '__main__':
+    # This guard is crucial for Windows to prevent infinite loops with multiprocessing
     train_model()
