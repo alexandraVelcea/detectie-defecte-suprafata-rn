@@ -72,26 +72,51 @@ project-name/
 
 ---
 
-##  3. Analiza Exploratorie a Datelor (EDA) – Sintetic
-
 ### 3.1 Statistici descriptive aplicate
 
-* **Medie, mediană, deviație standard**
-* **Min–max și quartile**
-* **Distribuții pe caracteristici** (histograme)
-* **Identificarea outlierilor** (IQR / percentile)
+Pentru a înțelege natura datelor vizuale, s-au calculat următoarele statistici pe setul de date brut și cel augmentat:
+
+-   **Distribuția Claselor:**
+
+    -   *Inițial (Raw):* Dezechilibru ușor între clase (variații între 250-300 imagini/clasă).
+
+    -   *Final (După preprocesare):* **Distribuție perfect uniformă** (195 imagini pe fiecare clasă: 105 Train + 45 Val + 45 Test), eliminând bias-ul modelului către clasele majoritare.
+
+-   **Analiza Bounding Box-urilor (Ancore):**
+
+    -   **Dimensiuni:** S-a observat o varianță mare a ariei defectelor.
+        -   *Inclusion/Scratches:* Ocupă în medie <5% din imagine (obiecte mici).
+        -   *Patches:* Ocupă adesea >30% din imagine (obiecte mari).
+
+    -   **Raport de aspect (Aspect Ratio):** *Scratches* au un raport extrem (foarte late și scunde sau înalte și înguste), în timp ce *Patches* tind spre 1:1 (pătrat).
+
+-   **Intensitatea Pixelilor:**
+    -   **Medie:** ~115 (pe o scară 0-255), indicând o luminozitate medie specifică oțelului gri.
+    -   **Deviație Standard:** Scăzută în zonele fără defecte, ridicată în zonele cu *Rolled-in Scale* (contrast puternic).
 
 ### 3.2 Analiza calității datelor
 
-* **Detectarea valorilor lipsă** (% pe coloană)
-* **Detectarea valorilor inconsistente sau eronate**
-* **Identificarea caracteristicilor redundante sau puternic corelate**
+-   **Detectarea valorilor lipsă:**
+    -   S-au identificat **0% valori lipsă** în setul final.
 
-### 3.3 Probleme identificate
+-   **Inconsistențe geometrice:**
+    -   S-au identificat coordonate de bounding box care depășeau dimensiunile imaginii (ex: `xmax > 200`). Acestea au fost corectate prin "clamping" la marginile imaginii în timpul conversiei XML-to-YOLO.
 
-* [exemplu] Feature X are 8% valori lipsă
-* [exemplu] Distribuția feature Y este puternic neuniformă
-* [exemplu] Variabilitate ridicată în clase (class imbalance)
+-   **Caracteristici redundante:**
+    -   Informația de culoare (Hue/Saturation) este redundantă, deoarece defectele sunt texturale. Modelul se bazează preponderent pe canalul de Luminanță (Grayscale).
+
+### 3.3 Probleme identificate și Soluții
+-   **Problema 1: Rezoluția mică (200x200 px)**
+    -   *Impact:* Defectele de tip **Crazing** (micro-fisuri) devin aproape invizibile la redimensionare, riscând să fie pierdute la convoluție.
+    -   *Soluție:* S-a aplicat augmentare prin creșterea contrastului pentru a accentua liniile fine.
+
+-   **Problema 2: Confuzii vizuale (Inter-class similarity)**
+    -   *Impact:* Clasele **Rolled-in Scale** și **Pitted Surface** au texturi foarte similare (puncte negre), ceea ce poate duce la erori de clasificare.
+    -   *Soluție:* Antrenarea modelului pentru mai multe epoci (100) pentru a învăța trăsături mai subtile.
+
+-   **Problema 3: Variabilitate scăzută a fundalului**
+    -   *Impact:* Modelul risca să memoreze fundalul specific NEU-DET în loc să învețe defectul.
+    -   *Soluție:* Generarea de date sintetice (`generate_augmentation.py`) a introdus variații artificiale de zgomot și luminozitate pentru a forța generalizarea.
 
 ---
 
@@ -99,8 +124,6 @@ project-name/
 
 ### 4.1 Curățarea datelor
 
-   * Eliminare duplicatelor: Verificare hash MD5 pe imagini.
-   * Tratarea valorilor lipsă: Ștergerea imaginilor care nu au fișier XML asociat (script clean_orphans.py).
    * Tratarea outlierilor: Excluderea adnotărilor cu arie < 10px².
 
 ### 4.2 Transformarea caracteristicilor
@@ -124,7 +147,7 @@ project-name/
 ### 4.4 Salvarea rezultatelor preprocesării
 
 * Date preprocesate în `data/processed/`
-* Seturi train/val/test în foldere dedicate
+* Seturi train/validation/test în foldere dedicate
 
 ---
 
@@ -153,7 +176,7 @@ project-name/
 **Disciplina:** Rețele Neuronale  
 **Instituție:** POLITEHNICA București – FIIR  
 **Student:** Velcea Alexandra 
-**Data:** [Data]  
+**Data:** Decembrie 2025  
 
 ---
 
@@ -172,6 +195,8 @@ project-name/
 │   └── datasets/          # descriere seturi de date, surse, diagrame
 ├── data/
 │   ├── raw/               # date brute
+│   │    ├── train/        # date antrenare (imagini + adnotări)
+│   │    └── validation/   # date validare (imagini + adnotări)
 │   ├── processed/         # date curățate și transformate
 │   ├── train/             # set de instruire
 │   ├── validation/        # set de validare
@@ -181,7 +206,8 @@ project-name/
 │   ├── data_acquisition/  # generare / achiziție date (dacă există)
 │   └── neural_network/    # implementarea RN (în etapa următoare)
 ├── config/                # fișiere de configurare
-└── requirements.txt       # dependențe Python (dacă aplicabil)
+├── requirements.txt       # dependențe Python (dacă aplicabil)
+└── README.md              # readme
 ```
 
 ---
@@ -198,7 +224,7 @@ project-name/
 
 * **Număr total de observații:** aprox. 1100 imagini
 * **Număr de caracteristici (features):** Imagine RGB (3 canale) + Adnotări Bounding Box
-* **Tipuri de date:** Imagini + Categoriale
+* **Tipuri de date:** Imagini + Text (adnotări)
 * **Format fișiere:** JPG, XML
 
 ### 2.3 Descrierea fiecărei caracteristici
@@ -213,7 +239,7 @@ project-name/
 | **BBox Width** | numeric | normalizat | Lățimea relativă a defectului. | **0.0 -- 1.0** |
 | **BBox Height** | numeric | normalizat | Înălțimea relativă a defectului. | **0.0 -- 1.0** |
 
-**Fișier recomandat:**  `data/README.md`
+**Fișier recomandat:**  `README.md`
 
 ---
 
@@ -221,15 +247,14 @@ project-name/
 
 ### 3.1 Statistici descriptive aplicate
 
--   **Distribuția claselor:** Inițial echilibrată în setul raw, menținută perfect echilibrată în Train/Val/Test prin scripturi dedicate.
+-   **Distribuția claselor:** Inițial echilibrată în setul raw/.
 -   **Dimensiuni Bounding Box:**
     -   *Inclusion/Scratches:* Arii mici, necesită ancore fine.
     -   *Patches:* Arii mari, ocupă uneori >30% din imagine.
--   **Intensitatea pixelilor:** Imaginile sunt grayscale (sau RGB cu canale identice), având o distribuție a luminozității concentrată în zona medie (gri metalic).
+-   **Intensitatea pixelilor:** Imaginile sunt grayscale, având o distribuție a luminozității concentrată în zona medie (gri metalic).
 
 ### 3.2 Analiza calității datelor
 
--   **Valori lipsă:** Identificate imagini în folderul `raw` care nu aveau fișiere XML corespunzătoare.
 -   **Inconsistențe:** Unele fișiere XML aveau coordonate `xmin > xmax`. Scriptul de conversie a tratat aceste erori prin clampare la dimensiunile imaginii.
 
 ### 3.3 Probleme identificate
@@ -249,15 +274,11 @@ project-name/
 ### 4.2 Transformarea caracteristicilor
 
 -   **Normalizare:** Coordonatele pixelilor au fost scalate în intervalul [0, 1] (cerință YOLO).
-
 -   **Conversie Format:** Transformarea adnotărilor din **Pascal VOC (XML)** în **YOLO (TXT)**:
-
     -   Formula: $x_{center} = \frac{(x_{min} + x_{max})}{2 \cdot width}$
 
 -   **Augmentare Sintetică:**
-
     -   S-au generat defecte specifice (ex: desenare linii pentru *scratches*, elipse pentru *patches*) peste imaginile de antrenament folosind scriptul `generate_augmentation.py`.
-
     -   Ajustări de luminozitate și contrast (Random Brightness/Contrast).
 
 ### 4.3 Structurarea seturilor de date
@@ -265,21 +286,17 @@ project-name/
 **Împărțire realizată (Stratificată):**
 
 -   **Train (54%):** 105 imagini/clasă (Doar date augmentate).
-
 -   **Validation (23%):** 45 imagini/clasă (Date originale).
-
 -   **Test (23%):** 45 imagini/clasă (Date originale).
 
 **Principii respectate:**
 
 -   **Stratificare:** Fiecare clasă are exact același număr de exemple.
-
 -   **Fără scurgere de informație (No Data Leakage):** Imaginile originale mutate în Test/Validation NU au fost folosite pentru generarea augmentărilor din data/train.
 
 ### 4.4 Salvarea rezultatelor preprocesării
 
 -   Structura finală salvată în `data/train`, `data/validation`, `data/test`.
-
 -   Configurația dataset-ului salvată în `data/data.yaml` pentru YOLOv8.
 
 ---
@@ -290,7 +307,7 @@ project-name/
 * `data/processed/` – date curățate & transformate
 * `data/train/`, `data/validation/`, `data/test/` – seturi finale
 * `src/preprocessing/` – codul de preprocesare
-* `data/README.md` – descrierea dataset-ului
+* `README.md` – descrierea dataset-ului
 
 ---
 
@@ -406,7 +423,7 @@ Am ales arhitectura de tip **Clasificare/Detecție la cerere**, specifică siste
 
 **Descriere detaliată:**
 
-Deoarece defectele industriale reale sunt costisitor de colectat, am dezvoltat un modul software propriu (`augment_and_split.py`) care simulează defecte.
+Deoarece defectele industriale reale sunt costisitor de colectat, am dezvoltat un modul software propriu (`generate_augmentation.py`) care simulează defecte.
 
 Scriptul ia imagini "curate" sau cu defecte minore și desenează algoritmic noi defecte:
 * **Scratches:** Linii Bezier aleatorii cu variații de culoare.
@@ -414,7 +431,7 @@ Scriptul ia imagini "curate" sau cu defecte minore și desenează algoritmic noi
 * **Crazing:** Rețele de linii fine interconectate.
 
 **Locația codului:** `src/data_acquisition/generate_augmentation.py`
-**Locația datelor:** `data/raw/train/images` (imaginile cu prefixul `aug_`)
+**Locația datelor:** `data/train/images` (imaginile cu prefixul `aug_`)
 
 **Dovezi:**
 - Scriptul sursă: `src/data_acquisition/generate_augmentation.py`
@@ -479,41 +496,23 @@ detectie-defecte-suprafata/
 
 ---
 
-  
-
 ## Scopul Etapei 5
-
-  
 
 Această etapă corespunde punctului **6. Configurarea și antrenarea modelului RN** din lista de 9 etape - slide 2 **RN Specificatii proiect.pdf**.
 
-  
-
 **Obiectiv principal:** Antrenarea efectivă a modelului RN definit în Etapa 4, evaluarea performanței și integrarea în aplicația completă.
-
-  
 
 **Pornire obligatorie:** Arhitectura completă și funcțională din Etapa 4:
 
 - State Machine definit și justificat
-
 - Cele 3 module funcționale (Data Logging, RN, UI)
-
 - Minimum 40% date originale în dataset
-
-  
 
 ---
 
-  
-
 ## PREREQUISITE – Verificare Etapa 4 (OBLIGATORIU)
 
-  
-
 **Înainte de a începe Etapa 5, verificați că aveți din Etapa 4:**
-
-  
 
 - [x] **State Machine** definit și documentat în `docs/state_machine.*`
 - [x] **Contribuție ≥40% date originale** în `data/generated/` (verificabil)
@@ -522,54 +521,30 @@ Această etapă corespunde punctului **6. Configurarea și antrenarea modelului 
 - [x] **Modul 3 (UI/Web Service)** funcțional cu model dummy
 - [x] **Tabelul "Nevoie → Soluție → Modul"** complet în README Etapa 4
 
-  
-
 ** Dacă oricare din punctele de mai sus lipsește → reveniți la Etapa 4 înainte de a continua.**
-
-  
 
 ---
 
-  
-
 ## Pregătire Date pentru Antrenare
-
-  
 
 ### Dacă ați adăugat date noi în Etapa 4 (contribuția de 40%):
 
-  
-
 **TREBUIE să refaceți preprocesarea pe dataset-ul COMBINAT:**
-
-  
-
 Exemplu:
 
 ```bash
 
 # 1. Combinare date vechi (Etapa 3) + noi (Etapa 4)
-
 python  src/preprocessing/combine_datasets.py
 
-  
-
 # 2. Refacere preprocesare COMPLETĂ
-
 python  src/preprocessing/data_cleaner.py
-
 python  src/preprocessing/feature_engineering.py
-
 python  src/preprocessing/data_splitter.py  --stratify  --random_state  42
 
-  
-
 # Verificare finală:
-
 # data/train/ → trebuie să conțină date vechi + noi
-
 # data/validation/ → trebuie să conțină date vechi + noi
-
 # data/test/ → trebuie să conțină date vechi + noi
 
 ```
