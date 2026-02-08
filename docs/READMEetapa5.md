@@ -501,7 +501,7 @@ streamlit  run  src/app/main.py
 
 - [x] Model ANTRENAT încărcat în UI din Etapa 4 (nu model dummy)
 - [x] UI face inferență REALĂ cu predicții corecte
-- [ ] Screenshot inferență reală în `docs/screenshots/inference_real.png`
+- [x] Screenshot inferență reală în `docs/screenshots/inference_real.png`
 - [ ] Verificat: predicțiile sunt diferite față de Etapa 4 (când erau random)
 
 ### Documentație Nivel 2 (dacă aplicabil)

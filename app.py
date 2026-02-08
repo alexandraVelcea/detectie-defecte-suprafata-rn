@@ -9,6 +9,20 @@ import random
 # --- CONFIGURARE PAGINA ---
 st.set_page_config(page_title="Detector Defecte Suprafata", layout="wide")
 
+# CSS Custom pentru centrarea imaginilor
+st.markdown(
+    """
+    <style>
+        [data-testid="stImage"] {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 st.title("NEU-DET: Detectie Defecte Suprafata")
 
 # --- SIDEBAR ---
@@ -17,87 +31,92 @@ conf_threshold = st.sidebar.slider("Prag de Incredere (Confidence)", 0.0, 1.0, 0
 
 st.sidebar.divider()
 st.sidebar.header("Setari Vizuale")
+# Default set to 350px as requested
+DISPLAY_WIDTH = st.sidebar.slider("Latime Afisare (px)", 150, 800, 350)
 box_thickness = st.sidebar.slider("Grosime Linie", 1, 5, 2)
 font_scale = st.sidebar.slider("Dimensiune Text", 0.3, 2.0, 0.6)
 
 # --- INCARCARE MODEL ---
 @st.cache_resource
 def load_model():
-    # Exemplu de cai posibile
     possible_paths = [
-        "runs/detect/defect_detector_HD/weights/best.pt",
-        "yolov8n.pt" # Fallback pentru testare rapida daca nu ai modelul custom
+        "models/surface_defect_model/weights/best.pt",
+        "yolov8n.pt" 
     ]
-
     for path in possible_paths:
         if os.path.exists(path):
             return YOLO(path)
-    
-    # Daca nu gaseste nimic local, descarca yolov8n standard (doar pentru demo)
     return YOLO("yolov8n.pt")
 
 model = load_model()
 
-# Functie pentru generarea de culori consistente pe baza ID-ului clasei
 def get_color(cls_id):
     random.seed(cls_id)
     return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+
+def resize_for_display(image_input, width):
+    """Resizes an image (numpy or PIL) to a target width while keeping aspect ratio."""
+    if isinstance(image_input, np.ndarray):
+        # OpenCV format (H, W, C)
+        h, w = image_input.shape[:2]
+        scale = width / w
+        return cv2.resize(image_input, (int(width), int(h * scale)))
+    else:
+        # PIL format
+        w_percent = (width / float(image_input.size[0]))
+        h_size = int((float(image_input.size[1]) * float(w_percent)))
+        return image_input.resize((int(width), h_size), Image.Resampling.LANCZOS)
 
 # --- INCARCARE IMAGINE ---
 uploaded_file = st.file_uploader("Alege o imagine...", type=["jpg", "png", "jpeg", "bmp"])
 
 if uploaded_file is not None:
-    image = Image.open(uploaded_file)
+    # 1. Load Original (Full Resolution)
+    original_pil = Image.open(uploaded_file)
     
-    # Convertim imaginea PIL in format OpenCV (numpy array)
-    img_array = np.array(image)
-    
+    # 2. Create a smaller copy just for the UI
+    display_original = resize_for_display(original_pil, DISPLAY_WIDTH)
+
     col1, col2 = st.columns(2)
 
     with col1:
         st.subheader("Imagine Originala")
-        st.image(image, use_column_width=True)
+        # Display the resized version
+        st.image(display_original, width=DISPLAY_WIDTH)
 
     # Butonul declanseaza predictia
     if st.sidebar.button("Detecteaza Defecte") or True:
         
-        # Predictie
-        results = model.predict(image, conf=conf_threshold)
+        # 3. Predictie (Run on FULL RESOLUTION image for best accuracy)
+        results = model.predict(original_pil, conf=conf_threshold)
         result = results[0]
 
-        # Copiem imaginea pentru a desena pe ea
-        # Daca imaginea are canal Alpha (RGBA), o convertim la RGB
+        # 4. Procesare Rezultat
+        # Convert full res image to array for drawing
+        img_array = np.array(original_pil)
         if img_array.shape[-1] == 4:
             img_array = cv2.cvtColor(img_array, cv2.COLOR_RGBA2RGB)
             
         annotated_img = img_array.copy()
 
-        # Iteram prin fiecare cutie (box) detectata
+        # Draw boxes on the FULL resolution image
         boxes = result.boxes
         if len(boxes) > 0:
             for box in boxes:
-                # 1. Extrage coordonatele (x1, y1, x2, y2)
                 x1, y1, x2, y2 = box.xyxy[0].cpu().numpy().astype(int)
-                
-                # 2. Extrage clasa si increderea
                 cls_id = int(box.cls[0])
                 conf = float(box.conf[0])
                 label_name = result.names[cls_id]
-                
-                # 3. Determina culoarea (RGB)
                 color = get_color(cls_id)
                 
-                # 4. Deseneaza dreptunghiul
                 cv2.rectangle(annotated_img, (x1, y1), (x2, y2), color, box_thickness)
                 
-                # 5. Deseneaza eticheta (Text)
                 label_text = f"{label_name} {conf:.2f}"
                 (w, h), _ = cv2.getTextSize(label_text, cv2.FONT_HERSHEY_SIMPLEX, font_scale, 1)
                 
-                # Fundal pentru text (pentru lizibilitate)
+                # Draw background for text
                 cv2.rectangle(annotated_img, (x1, y1 - 20), (x1 + w, y1), color, -1)
-                
-                # Textul propriu-zis (Alb)
+                # Draw text
                 cv2.putText(annotated_img, label_text, (x1, y1 - 5), 
                             cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), 1)
 
@@ -105,9 +124,12 @@ if uploaded_file is not None:
         else:
             st.warning("Nu au fost detectate obiecte.")
 
+        # 5. Resize the ANNOTATED image for display
+        display_annotated = resize_for_display(annotated_img, DISPLAY_WIDTH)
+
         with col2:
             st.subheader("Rezultat Vizual")
-            st.image(annotated_img, use_column_width=True)
+            st.image(display_annotated, width=DISPLAY_WIDTH)
 
         # Tabel date
         if len(boxes) > 0:
