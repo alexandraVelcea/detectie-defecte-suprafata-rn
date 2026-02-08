@@ -1,0 +1,5 @@
+Split,Real Images,Synthetic Images,Total,% Synthetic
+train,630,630,1260,50.00%
+validation,270,0,270,0.00%
+test,270,0,270,0.00%
+TOTAL,1170,630,1800,35.00%

@@ -1,0 +1,17 @@
+# --- Core AI Framework ---
+ultralytics>=8.0.0
+torch>=2.0.0
+torchvision>=0.15.0
+
+# --- Image Processing & Visualization ---
+opencv-python
+matplotlib
+seaborn
+Pillow
+numpy
+
+# --- Data Handling ---
+pandas
+scipy
+tqdm
+pyyaml

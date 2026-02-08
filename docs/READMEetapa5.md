@@ -21,7 +21,7 @@ Această etapă corespunde punctului **6. Configurarea și antrenarea modelului 
 **Înainte de a începe Etapa 5, verificați că aveți din Etapa 4:**
 
 - [x] **State Machine** definit și documentat în `docs/state_machine.*`
-- [x] **Contribuție ≥40% date originale** în `data/generated/` (verificabil)
+- [x] **Contribuție ≥40% date originale** în `data/train/` (verificabil)
 - [x] **Modul 1 (Data Logging)** funcțional - produce CSV-uri
 - [x] **Modul 2 (RN)** cu arhitectură definită dar NEANTRENATĂ (`models/untrained_model.h5`)
 - [x] **Modul 3 (UI/Web Service)** funcțional cu model dummy
@@ -58,7 +58,7 @@ python  src/preprocessing/data_splitter.py  --stratify  --random_state  42
 ** ATENȚIE - Folosiți ACEIAȘI parametri de preprocesare:**
 
 - Același `scaler` salvat în `config/preprocessing_params.pkl`
-- Aceiași proporții split: 70% train / 15% validation / 15% test
+- Aceleași proporții split: 70% train / 15% validation / 15% test
 - Același `random_state=42` pentru reproducibilitate
 
 ---
@@ -89,12 +89,13 @@ Completați tabelul cu hiperparametrii folosiți și **justificați fiecare aleg
 
 | **Hiperparametru** | **Valoare Aleasă** | **Justificare** |
 | --- | --- | --- |
-| **Learning rate** | `0.01` (inițial) | Valoare standard pentru optimizatorul SGD în YOLO. Este suficient de mare pentru a ieși din minime locale la început, scăzând treptat (Scheduler Cosine) pentru fine-tuning. |
-| **Batch size** | `2` | Compromis pentru hardware limitat (laptop/CPU). |
-| **Number of epochs** | `100` | Dataset-ul fiind relativ mic, modelul are nevoie de mai multe iterații pentru a converge. Folosim **Early Stopping** (patience=15) pentru a opri procesul automat dacă apare overfitting. |
-| **Optimizer** | `SGD` (cu Momentum) | Stochastic Gradient Descent (cu momentum 0.937) este standardul pentru antrenarea YOLO, oferind o generalizare mai bună pe imagini decât Adam. |
-| **Loss function** | `CIoU` (Box) + `BCE` (Cls) | YOLO folosește o funcție compusă: **CIoU** pentru localizarea geometrică a defectului și **Binary Cross Entropy** pentru probabilitatea claselor (cele 6 tipuri de defecte). |
-| **Activation functions** | `SiLU` (Hidden) | YOLOv8 utilizează intern **SiLU** (Swish), care performează mai bine decât ReLU în rețelele convoluționale adânci, prevenind problema "dying neurons". |
+| **Epoci (`epochs`)** | **100** | S-a ales o limită superioară extinsă pentru a garanta convergența modelului, permițând rețelei să învețe caracteristicile complexe ale defectelor subtile. |
+| **Rezoluție (`imgsz`)** | **832** | Rezoluție HD (peste standardul de 640px). Esențială pentru a păstra detaliile fine ale defectelor mici (ex: *crazing*, *scratches*) care s-ar pierde la redimensionare. |
+| **Batch Size (`batch`)** | **2** | Valoare redusă forțat de rezoluția mare (832px). Permite antrenarea pe GPU cu memorie VRAM limitată, prevenind erorile de tip *Out of Memory (OOM)*. |
+| **Răbdare (`patience`)** | **20** | Mecanism de *Early Stopping*. Oprește antrenarea dacă performanța nu crește timp de 20 de epoci consecutiv, prevenind *overfitting-ul* și economisind resurse. |
+| **AMP (`amp`)** | **False** | *Automatic Mixed Precision* dezactivat. Forțează utilizarea preciziei complete (FP32) pentru o stabilitate maximă a antrenării, crucială pentru texturi metalice cu contrast mic. |
+| **Workers (`workers`)** | **0** | Setare specifică pentru stabilitate pe Windows. Elimină erorile de multiprocesare (`BrokenPipeError`) în timpul încărcării datelor. |
+| **Cache (`cache`)** | **False** | Dezactivarea stocării în RAM pentru a elibera resurse sistemului, necesar deoarece imaginile de 832px ocupă multă memorie. |
 
 **Justificare detaliată batch size:**
 
@@ -278,7 +279,7 @@ Măsuri corective propuse:
 
 ```
 
-proiect-rn-[prenume-nume]/
+proiect-rn-velcea-alexandra/
 
 ├── README.md # Overview general proiect (actualizat)
 ├── etapa3_analiza_date.md # Din Etapa 3

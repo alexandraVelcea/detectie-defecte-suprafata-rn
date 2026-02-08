@@ -7,7 +7,7 @@ def detect_defects(image_path):
     # 1. Load YOUR trained model
     # After training, the best model is saved here. Update path if needed.
     # Check your project root for the 'runs' folder.
-    model_path = 'runs/detect/defect_detector/weights/best.pt'
+    model_path = 'models/surface_defect_model/weights/best.pt'
     
     if not os.path.exists(model_path):
         print(f"Error: Model not found at {model_path}. Train the model first!")

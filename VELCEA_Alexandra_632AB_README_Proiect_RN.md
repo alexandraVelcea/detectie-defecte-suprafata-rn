@@ -83,7 +83,7 @@ Acest proiect propune o soluție automatizată de tip Computer Vision, utilizân
 |----------------|---------|
 | **Origine date** | Dataset public |
 | **Sursa concretă** | https://www.kaggle.com/datasets/kaustubhdikshit/neu-surface-defect-database |
-| **Sursă imagini demo** | https://www.researchgate.net/figure/Samples-images-of-six-classes-of-typical-surface-defects_fig3_340436222 |
+| **Sursă imagini demo** | https://www.researchgate.net/figure/Samples-images-of-six-classes-of-typical-surface-defects_fig3_340436222 + https://www.mdpi.com/2076-3417/11/16/7657 |
 | **Număr total observații finale (N)** | aprox. 1100 |
 | **Număr features** | 6 |
 | **Tipuri de date** | Categoriale / Imagini |

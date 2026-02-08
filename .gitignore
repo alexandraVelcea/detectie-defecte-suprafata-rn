@@ -1,7 +1,7 @@
 .env
 kaggle.json
 data/raw/
-runs/detect/defect_detector_HD2/weights/best.pt
-runs/detect/defect_detector_HD2/weights/last.pt
-runs/detect/defect_detector_HD6/weights/best.pt
-runs/detect/defect_detector_HD6/weights/last.pt
+models/defect_detector_HD2/weights/best.pt
+models/defect_detector_HD2/weights/last.pt
+models/defect_detector_HD6/weights/best.pt
+models/defect_detector_HD6/weights/last.pt
