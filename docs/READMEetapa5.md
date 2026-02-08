@@ -291,8 +291,8 @@ proiect-rn-velcea-alexandra/
 │ ├── loss_curve.png # NOU - Grafic antrenare
 │ ├── confusion_matrix.png # (opțional - Nivel 3)
 │ └── screenshots/
-│ ├── inference_real.png # NOU - OBLIGATORIU
-│ └── ui_demo.png # Din Etapa 4
+│     ├── inference_real.png # NOU - OBLIGATORIU
+│     └── ui_demo.png # Din Etapa 4
 │
 ├── data/ # Din Etapa 3-4 (NESCHIMBAT)
 │ ├── raw/
@@ -500,19 +500,19 @@ streamlit  run  src/app/main.py
 ### Integrare UI și Demonstrație - Nivel 1 (OBLIGATORIU)
 
 - [x] Model ANTRENAT încărcat în UI din Etapa 4 (nu model dummy)
-- [ ] UI face inferență REALĂ cu predicții corecte
+- [x] UI face inferență REALĂ cu predicții corecte
 - [ ] Screenshot inferență reală în `docs/screenshots/inference_real.png`
 - [ ] Verificat: predicțiile sunt diferite față de Etapa 4 (când erau random)
 
 ### Documentație Nivel 2 (dacă aplicabil)
 
-- [ ] Early stopping implementat și documentat în cod
+- [x] Early stopping implementat și documentat în cod
 
 - [ ] Learning rate scheduler folosit (ReduceLROnPlateau / StepLR)
 
 - [ ] Augmentări relevante domeniu aplicate (NU rotații simple!)
 
-- [ ] Grafic loss/val_loss salvat în `docs/loss_curve.png`
+- [x] Grafic loss/val_loss salvat în `docs/loss_curve.png`
 
 - [ ] Analiză erori în context industrial completată (4 întrebări răspunse)
 
@@ -530,7 +530,7 @@ streamlit  run  src/app/main.py
 
 ### Verificări Tehnice
 
-- [ ] `requirements.txt` actualizat cu toate bibliotecile noi
+- [x] `requirements.txt` actualizat cu toate bibliotecile noi
 
 - [x] Toate path-urile RELATIVE (nu absolute: `/Users/...` )
 
@@ -538,15 +538,15 @@ streamlit  run  src/app/main.py
 
 - [x] `git log` arată commit-uri incrementale (NU 1 commit gigantic)
 
-- [ ] Verificare anti-plagiat: toate punctele 1-5 respectate
+- [x] Verificare anti-plagiat: toate punctele 1-5 respectate
 
   
 
 ### Verificare State Machine (Etapa 4)
 
-- [ ] Fluxul de inferență respectă stările din State Machine
+- [x] Fluxul de inferență respectă stările din State Machine
 
-- [ ] Toate stările critice (PREPROCESS, INFERENCE, ALERT) folosesc model antrenat
+- [x] Toate stările critice (PREPROCESS, INFERENCE, ALERT) folosesc model antrenat
 
 - [x] UI reflectă State Machine-ul pentru utilizatorul final
 
@@ -556,15 +556,15 @@ streamlit  run  src/app/main.py
 
 - [ ] `docs/etapa5_antrenare_model.md` completat cu TOATE secțiunile
 
-- [ ] Structură repository conformă: `docs/`, `results/`, `models/` actualizate
+- [x] Structură repository conformă: `docs/`, `results/`, `models/` actualizate
 
-- [ ] Commit: `"Etapa 5 completă – Accuracy=X.XX, F1=X.XX"`
+- [x] Commit: `"Etapa 5 completă – Accuracy=X.XX, F1=X.XX"`
 
-- [ ] Tag: `git tag -a v0.5-model-trained -m "Etapa 5 - Model antrenat"`
+- [x] Tag: `git tag -a v0.5-model-trained -m "Etapa 5 - Model antrenat"`
 
-- [ ] Push: `git push origin main --tags`
+- [x] Push: `git push origin main --tags`
 
-- [ ] Repository accesibil (public sau privat cu acces profesori)
+- [x] Repository accesibil (public sau privat cu acces profesori)
 
   
 
