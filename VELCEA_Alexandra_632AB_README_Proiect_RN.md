@@ -584,35 +584,35 @@ python src/neural_network/evaluate.py --model models/optimized_model.h5 --quick-
 
 - [ ] **Accuracy ≥70%** pe test set (verificat în `results/final_metrics.json`)
 - [ ] **F1-Score ≥0.65** pe test set
-- [ ] **Contribuție ≥40% date originale** (verificabil în `data/generated/`)
-- [ ] **Model antrenat de la zero** (NU pre-trained fine-tuning)
+- [x] **Contribuție ≥40% date originale** (verificabil în `data/generated/`)
+- [x] **Model antrenat de la zero** (NU pre-trained fine-tuning)
 - [ ] **Minimum 4 experimente** de optimizare documentate (tabel în Secțiunea 5.3)
-- [ ] **Confusion matrix** generată și interpretată (Secțiunea 6.2)
-- [ ] **State Machine** definit cu minimum 4-6 stări (Secțiunea 4.2)
-- [ ] **Cele 3 module funcționale:** Data Logging, RN, UI (Secțiunea 4.1)
+- [x] **Confusion matrix** generată și interpretată (Secțiunea 6.2)
+- [x] **State Machine** definit cu minimum 4-6 stări (Secțiunea 4.2)
+- [x] **Cele 3 module funcționale:** Data Logging, RN, UI (Secțiunea 4.1)
 - [ ] **Demonstrație end-to-end** disponibilă în `docs/demo/`
 
 ### Repository și Documentație
 
-- [ ] **README.md** complet (toate secțiunile completate cu date reale)
+- [x] **README.md** complet (toate secțiunile completate cu date reale)
 - [ ] **4 README-uri etape** prezente în `docs/` (etapa3, etapa4, etapa5, etapa6)
 - [ ] **Screenshots** prezente în `docs/screenshots/`
 - [ ] **Structura repository** conformă cu Secțiunea 8
-- [ ] **requirements.txt** actualizat și funcțional
+- [x] **requirements.txt** actualizat și funcțional
 - [ ] **Cod comentat** (minim 15% linii comentarii relevante)
-- [ ] **Toate path-urile relative** (nu absolute: `/Users/...` sau `C:\...`)
+- [x] **Toate path-urile relative** (nu absolute: `/Users/...` sau `C:\...`)
 
 ### Acces și Versionare
 
-- [ ] **Repository accesibil** cadrelor didactice RN (public sau privat cu acces)
+- [x] **Repository accesibil** cadrelor didactice RN (public sau privat cu acces)
 - [ ] **Tag `v0.6-optimized-final`** creat și pushed
-- [ ] **Commit-uri incrementale** vizibile în `git log` (nu 1 commit gigantic)
-- [ ] **Fișiere mari** (>100MB) excluse sau în `.gitignore`
+- [x] **Commit-uri incrementale** vizibile în `git log` (nu 1 commit gigantic)
+- [x] **Fișiere mari** (>100MB) excluse sau în `.gitignore`
 
 ### Verificare Anti-Plagiat
 
 - [ ] Model antrenat **de la zero** (weights inițializate random, nu descărcate)
-- [ ] **Minimum 40% date originale** (nu doar subset din dataset public)
+- [x] **Minimum 40% date originale** (nu doar subset din dataset public)
 - [ ] Cod propriu sau clar atribuit (surse citate în Bibliografie)
 
 ---

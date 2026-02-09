@@ -2,9 +2,9 @@
 
 **Disciplina:** Rețele Neuronale  
 **Instituție:** POLITEHNICA București – FIIR  
-**Student:** [Nume Prenume]  
-**Link Repository GitHub:** [URL complet]  
-**Data predării:** Inauarie 2026
+**Student:** Velcea Alexandra
+**Link Repository GitHub:** https://github.com/alexandraVelcea/detectie-defecte-suprafata-rn
+**Data predării:** Ianuarie 2026
 
 ---
 ## Scopul Etapei 6
@@ -62,8 +62,8 @@ Deși Etapa 6 încheie ciclul formal de dezvoltare, **procesul iterativ continu�
 
 - [x] **Model antrenat** salvat în `models/trained_model.h5` (sau `.pt`, `.lvmodel`)
 - [x] **Metrici baseline** raportate: Accuracy ≥65%, F1-score ≥0.60
-- [ ] **Tabel hiperparametri** cu justificări completat
-- [ ] **`results/training_history.csv`** cu toate epoch-urile
+- [x] **Tabel hiperparametri** cu justificări completat
+- [x] **`results/training_history.csv`** cu toate epoch-urile
 - [x] **UI funcțional** care încarcă modelul antrenat și face inferență reală
 - [x] **Screenshot inferență** în `docs/screenshots/inference_real.png`
 - [x] **State Machine** implementat conform definiției din Etapa 4
@@ -96,12 +96,12 @@ Documentați **minimum 4 experimente** cu variații sistematice:
 
 | **Exp#** | **Modificare față de Baseline (Etapa 5)** | **Accuracy** | **F1-score** | **Timp antrenare** | **Observații** |
 |----------|------------------------------------------|--------------|--------------|-------------------|----------------|
-| Baseline | Configurația din Etapa 5 | 0.72 | 0.68 | 15 min | Referință |
-| Exp 1 | Learning rate 0.0001 → 0.001 | 0.74 | 0.70 | 12 min | Convergență mai rapidă |
-| Exp 2 | Batch size 32 → 64 | 0.71 | 0.67 | 10 min | Stabilitate redusă |
-| Exp 3 | +1 hidden layer (128 neuroni) | 0.76 | 0.73 | 22 min | Îmbunătățire semnificativă |
-| Exp 4 | Dropout 0.3 → 0.5 | 0.73 | 0.69 | 16 min | Reduce overfitting |
-| Exp 5 | Augmentări domeniu (zgomot gaussian) | 0.78 | 0.75 | 25 min | **BEST** - ales pentru final |
+| Baseline - **surface_defect_model** | Configurația din Etapa 5 | 0.63 | 0.63 | 12min | Referință |
+| Exp 1 - **defect_detector_HD** | Learning rate 0.0001 → 0.001 | 0.68 | 0.62 | 2h 15 min | Convergență mai rapidă |
+| Exp 2 - **defect_detector_HD6** | Batch size 32 → 64 | - | - | 1 min | Eroare CUDA out of memory |
+| Exp 3 - **defect_detector_HD8** | +1 hidden layer (128 neuroni) | - | - | 4h | Eroare CUDA out of memory |
+| Exp 4 - **defect_detector3** | Dropout 0.3 → 0.5 | 0.67 | 0.63 | 18min | Reduce overfitting |
+| Exp 5 - **defect_detector_ult** | Augmentări domeniu (zgomot gaussian) | 0.72 | 0.66 | 3h 30min | **BEST** - ales pentru final |
 
 **Justificare alegere configurație finală:**
 ```
@@ -344,9 +344,9 @@ Salvați în `docs/results/`:
 **Obiective atinse:**
 - [ ] Model RN funcțional cu accuracy [X]% pe test set
 - [ ] Integrare completă în aplicație software (3 module)
-- [ ] State Machine implementat și actualizat
-- [ ] Pipeline end-to-end testat și documentat
-- [ ] UI demonstrativ cu inferență reală
+- [x] State Machine implementat și actualizat
+- [x] Pipeline end-to-end testat și documentat
+- [x] UI demonstrativ cu inferență reală
 - [ ] Documentație completă pe toate etapele
 
 **Obiective parțial atinse:**

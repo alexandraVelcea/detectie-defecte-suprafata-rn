@@ -1,15 +1,13 @@
 import pandas as pd
 import shutil
 import json
-import matplotlib.pyplot as plt
 from pathlib import Path
 
 # --- CONFIGURATION ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
-# 1. Source Directory (Where YOLO saved the training logs)
-# Adjust 'defect_detector_HD' if you used a different name in train.py
-TRAIN_RUN_DIR = PROJECT_ROOT / "models" / "surface_defect_model"
+# 1. Source Directory
+TRAIN_RUN_DIR = PROJECT_ROOT / "models" / "defect_detector_ult"
 SOURCE_CSV = TRAIN_RUN_DIR / "results.csv"
 
 # 2. Destination Directories
@@ -17,10 +15,12 @@ RESULTS_DIR = PROJECT_ROOT / "results"
 DOCS_DIR = PROJECT_ROOT / "docs"
 
 def export_history():
-    print(f"Looking for training artifacts in: {TRAIN_RUN_DIR}")
+    print("--- EXPORTING RESULTS ---")
+    print(f"Source: {TRAIN_RUN_DIR}")
     
     if not SOURCE_CSV.exists():
         print(f"Error: Could not find results.csv at {SOURCE_CSV}")
+        print("Did the training finish successfully?")
         return
 
     # Ensure destination folders exist
@@ -29,44 +29,70 @@ def export_history():
 
     try:
         # --- PART 1: CSV Export ---
-        print("\nExporting Training History CSV...")
+        print("\n1. Processing Training History...")
         df = pd.read_csv(SOURCE_CSV)
-        # Clean column names (strip whitespace)
+        # Clean column names
         df.columns = [c.strip() for c in df.columns]
         
+        # Save clean CSV
         dest_csv = RESULTS_DIR / "training_history.csv"
         df.to_csv(dest_csv, index=False)
-        print(f"   Saved to: {dest_csv}")
+        print(f"   CSV saved to: {dest_csv}")
 
-        # --- PART 2: JSON Metrics Export ---
-        print("\nCreating test_metrics.json...")
-        # We take the metrics from the LAST epoch (best representation of final model state)
+        # --- PART 2: Metrics Calculation & JSON ---
+        print("\n2. Calculating Metrics...")
+        # Get the LAST epoch
         last_epoch = df.iloc[-1]
         
-        # Mapping YOLO columns to your requirement
+        # Retrieve core metrics safely
+        precision = float(last_epoch.get('metrics/precision(B)', 0))
+        recall = float(last_epoch.get('metrics/recall(B)', 0))
+        map50 = float(last_epoch.get('metrics/mAP50(B)', 0))
+        map50_95 = float(last_epoch.get('metrics/mAP50-95(B)', 0))
+        
+        # --- CALCULATE F1 SCORE ---
+        if (precision + recall) > 0:
+            f1_score = 2 * (precision * recall) / (precision + recall)
+        else:
+            f1_score = 0.0
+
+        # Construct JSON Data
         metrics_data = {
-            "epoch": int(last_epoch['epoch']),
-            "train_box_loss": float(last_epoch['train/box_loss']),
-            "train_cls_loss": float(last_epoch['train/cls_loss']),
-            "val_box_loss": float(last_epoch['val/box_loss']),
-            "val_cls_loss": float(last_epoch['val/cls_loss']),
+            "model_name": TRAIN_RUN_DIR.name,
+            "epoch": int(last_epoch.get('epoch', 0)),
+            "accuracy": map50,
+            "f1_score": f1_score,
+            "train_box_loss": float(last_epoch.get('train/box_loss', 0)),
+            "train_cls_loss": float(last_epoch.get('train/cls_loss', 0)),
+            "val_box_loss": float(last_epoch.get('val/box_loss', 0)),
+            "val_cls_loss": float(last_epoch.get('val/cls_loss', 0)),
             "metrics": {
-                "precision": float(last_epoch['metrics/precision(B)']),
-                "recall": float(last_epoch['metrics/recall(B)']),
-                "mAP_50": float(last_epoch['metrics/mAP50(B)']),
-                "mAP_50_95": float(last_epoch['metrics/mAP50-95(B)'])
+                "precision": precision,
+                "recall": recall,
+                "mAP_50": map50,
+                "mAP_50_95": map50_95
             }
         }
         
+        # Save JSON
         dest_json = RESULTS_DIR / "test_metrics.json"
         with open(dest_json, "w") as f:
             json.dump(metrics_data, f, indent=4)
-        print(f"   Saved to: {dest_json}")
+        print(f"   JSON saved to: {dest_json}")
 
-        # --- PART 3: Visuals Export (Docs) ---
-        print("\nCopying Visuals to Docs...")
+        # --- PART 3: Console Output ---
+        print("\n" + "="*30)
+        print("FINAL MODEL PERFORMANCE")
+        print("="*30)
+        print(f"Accuracy (mAP@50):  {map50:.2%}")
+        print(f"F1 Score:           {f1_score:.4f}")
+        print(f"Precision:          {precision:.4f}")
+        print(f"Recall:             {recall:.4f}")
+        print("="*30)
+
+        # --- PART 4: Visuals Export (Docs) ---
+        print("\n3. Copying Visuals to Docs...")
         
-        # Define files to copy (Source Name -> Dest Name)
         files_to_copy = {
             "results.png": "loss_curve.png",
             "confusion_matrix.png": "confusion_matrix.png"

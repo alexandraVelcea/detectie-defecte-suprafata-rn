@@ -17,13 +17,13 @@ def move_files(source_folder, dest_folder, file_extensions):
     Moves files with specific extensions from source to destination.
     """
     if not source_folder.exists():
-        print(f"⚠️  Source not found: {source_folder}")
+        print(f"Source not found: {source_folder}")
         return
 
     # Create destination
     dest_folder.mkdir(parents=True, exist_ok=True)
     
-    print(f"📂 Scanning {source_folder.name}...")
+    print(f"Scanning {source_folder.name}...")
     
     count = 0
     for root, dirs, files in os.walk(source_folder):
@@ -39,7 +39,7 @@ def move_files(source_folder, dest_folder, file_extensions):
                 shutil.move(str(src_path), str(dst_path))
                 count += 1
 
-    print(f"✅ Moved {count} files to: {dest_folder}\n")
+    print(f"Moved {count} files to: {dest_folder}\n")
 
 def run_reorganization():
     print("--- REORGANIZING DATASET ---\n")

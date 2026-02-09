@@ -40,7 +40,7 @@ font_scale = st.sidebar.slider("Dimensiune Text", 0.3, 2.0, 0.6)
 @st.cache_resource
 def load_model():
     possible_paths = [
-        "models/surface_defect_model/weights/best.pt",
+        "models/defect_detector_ult/weights/best.pt",
         "yolov8n.pt" 
     ]
     for path in possible_paths:
