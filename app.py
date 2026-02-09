@@ -1,15 +1,16 @@
 import streamlit as st
 from ultralytics import YOLO
-from PIL import Image
-import cv2
+from PIL import Image, ImageDraw, ImageFont, ImageColor
 import numpy as np
 import os
 import random
+import pandas as pd
+import json
 
-# --- CONFIGURARE PAGINA ---
-st.set_page_config(page_title="Detector Defecte Suprafata", layout="wide")
+# --- PAGE CONFIGURATION ---
+st.set_page_config(page_title="NEU-DET Surface Defect Detector", layout="wide")
 
-# CSS Custom pentru centrarea imaginilor
+# Custom CSS for centering images
 st.markdown(
     """
     <style>
@@ -23,23 +24,25 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.title("NEU-DET: Detectie Defecte Suprafata")
+st.title("NEU-DET: Surface Defect Detection")
 
-# --- SIDEBAR ---
-st.sidebar.header("Configurare Model")
-conf_threshold = st.sidebar.slider("Prag de Incredere (Confidence)", 0.0, 1.0, 0.25, 0.05)
+# --- SIDEBAR CONFIGURATION ---
+st.sidebar.header("Model Configuration")
+# Changing this slider will now auto-refresh the detection!
+conf_threshold = st.sidebar.slider("Confidence Threshold", 0.0, 1.0, 0.40, 0.05)
 
 st.sidebar.divider()
-st.sidebar.header("Setari Vizuale")
-# Default set to 350px as requested
-DISPLAY_WIDTH = st.sidebar.slider("Latime Afisare (px)", 150, 800, 350)
-box_thickness = st.sidebar.slider("Grosime Linie", 1, 5, 2)
-font_scale = st.sidebar.slider("Dimensiune Text", 0.3, 2.0, 0.6)
+st.sidebar.header("Visual Settings")
+DISPLAY_WIDTH = st.sidebar.slider("Display Width (px)", 300, 800, 500)
+box_thickness = st.sidebar.slider("Box Thickness", 1, 5, 2)
+font_scale = st.sidebar.slider("Text Size", 10, 30, 15)
 
-# --- INCARCARE MODEL ---
+# --- LOAD MODEL ---
 @st.cache_resource
 def load_model():
+    # Priority: Augmented Model -> Ultimate Model -> Nano Fallback
     possible_paths = [
+        "models/defect_detector_AUG/weights/best.pt",
         "models/defect_detector_ult/weights/best.pt",
         "yolov8n.pt" 
     ]
@@ -50,97 +53,165 @@ def load_model():
 
 model = load_model()
 
+# --- LOAD METRICS ---
+def load_metrics():
+    """Loads training history and final metrics from results folder."""
+    history_path = "results/training_history.csv"
+    metrics_path = "results/test_metrics.json"
+    
+    df = None
+    final_metrics = None
+    
+    if os.path.exists(history_path):
+        df = pd.read_csv(history_path)
+        # Rename columns for cleaner display if necessary
+        df.columns = [c.strip() for c in df.columns]
+
+    if os.path.exists(metrics_path):
+        with open(metrics_path, 'r') as f:
+            final_metrics = json.load(f)
+            
+    return df, final_metrics
+
+df_history, final_metrics = load_metrics()
+
+# --- UTILS ---
 def get_color(cls_id):
     random.seed(cls_id)
-    return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    return (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
 
-def resize_for_display(image_input, width):
-    """Resizes an image (numpy or PIL) to a target width while keeping aspect ratio."""
-    if isinstance(image_input, np.ndarray):
-        # OpenCV format (H, W, C)
-        h, w = image_input.shape[:2]
-        scale = width / w
-        return cv2.resize(image_input, (int(width), int(h * scale)))
-    else:
-        # PIL format
-        w_percent = (width / float(image_input.size[0]))
-        h_size = int((float(image_input.size[1]) * float(w_percent)))
-        return image_input.resize((int(width), h_size), Image.Resampling.LANCZOS)
+def resize_image(image, target_width):
+    """Resizes PIL image to target width while maintaining aspect ratio."""
+    w_percent = (target_width / float(image.size[0]))
+    h_size = int((float(image.size[1]) * float(w_percent)))
+    return image.resize((target_width, h_size), Image.Resampling.LANCZOS)
 
-# --- INCARCARE IMAGINE ---
-uploaded_file = st.file_uploader("Alege o imagine...", type=["jpg", "png", "jpeg", "bmp"])
+# --- MAIN APP LOGIC ---
+
+# 1. METRICS DASHBOARD (Sidebar)
+if final_metrics:
+    st.sidebar.divider()
+    st.sidebar.subheader("Model Accuracy")
+    
+    # Accuracy (mAP@50)
+    acc = final_metrics.get("accuracy", 0.0)
+    st.sidebar.metric(label="Accuracy (mAP@50)", value=f"{acc:.1%}")
+    
+    # F1 Score
+    f1 = final_metrics.get("f1_score", 0.0)
+    st.sidebar.metric(label="F1 Score", value=f"{f1:.4f}")
+
+# 2. IMAGE UPLOAD & AUTOMATIC DETECTION
+uploaded_file = st.file_uploader("Upload Image...", type=["jpg", "png", "jpeg", "bmp"])
 
 if uploaded_file is not None:
-    # 1. Load Original (Full Resolution)
-    original_pil = Image.open(uploaded_file)
-    
-    # 2. Create a smaller copy just for the UI
-    display_original = resize_for_display(original_pil, DISPLAY_WIDTH)
+    # Load and Resize for Display
+    original_pil = Image.open(uploaded_file).convert("RGB")
+    display_img = resize_image(original_pil, DISPLAY_WIDTH)
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("Imagine Originala")
-        # Display the resized version
-        st.image(display_original, width=DISPLAY_WIDTH)
+        st.subheader("Input Image")
+        st.image(display_img)
 
-    # Butonul declanseaza predictia
-    if st.sidebar.button("Detecteaza Defecte") or True:
-        
-        # 3. Predictie (Run on FULL RESOLUTION image for best accuracy)
-        results = model.predict(original_pil, conf=conf_threshold)
-        result = results[0]
+    # --- AUTOMATIC DETECTION START ---
+    # No button needed. This code runs immediately when file is uploaded.
+    
+    # Run Inference
+    results = model.predict(original_pil, conf=conf_threshold)
+    result = results[0]
 
-        # 4. Procesare Rezultat
-        # Convert full res image to array for drawing
-        img_array = np.array(original_pil)
-        if img_array.shape[-1] == 4:
-            img_array = cv2.cvtColor(img_array, cv2.COLOR_RGBA2RGB)
+    # Prepare Annotation Canvas
+    annotated_pil = original_pil.copy()
+    draw = ImageDraw.Draw(annotated_pil)
+    
+    # Load font
+    try:
+        # Try a standard font, fallback to default if missing
+        font = ImageFont.truetype("arial.ttf", font_scale)
+    except IOError:
+        font = ImageFont.load_default()
+
+    boxes = result.boxes
+    detections_data = []
+
+    if len(boxes) > 0:
+        for box in boxes:
+            # Coordinates
+            x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
             
-        annotated_img = img_array.copy()
+            # Class and Confidence
+            cls_id = int(box.cls[0])
+            conf = float(box.conf[0])
+            label_name = result.names[cls_id]
+            color = get_color(cls_id)
+            
+            # Draw Box
+            draw.rectangle([x1, y1, x2, y2], outline=color, width=box_thickness)
+            
+            # Label Text
+            label_text = f"{label_name} {conf:.0%}"
+            
+            # Calculate Text Size for background
+            left, top, right, bottom = draw.textbbox((x1, y1), label_text, font=font)
+            text_width = right - left
+            text_height = bottom - top
+            
+            # Adjust label position (above box, or inside if too high)
+            text_y = y1 - text_height - 5
+            if text_y < 0: 
+                text_y = y1 + 5
+            
+            # Draw Text Background
+            draw.rectangle(
+                [x1, text_y, x1 + text_width + 4, text_y + text_height + 4],
+                fill=color
+            )
+            # Draw Text
+            draw.text((x1 + 2, text_y), label_text, fill="white", font=font)
 
-        # Draw boxes on the FULL resolution image
-        boxes = result.boxes
-        if len(boxes) > 0:
-            for box in boxes:
-                x1, y1, x2, y2 = box.xyxy[0].cpu().numpy().astype(int)
-                cls_id = int(box.cls[0])
-                conf = float(box.conf[0])
-                label_name = result.names[cls_id]
-                color = get_color(cls_id)
-                
-                cv2.rectangle(annotated_img, (x1, y1), (x2, y2), color, box_thickness)
-                
-                label_text = f"{label_name} {conf:.2f}"
-                (w, h), _ = cv2.getTextSize(label_text, cv2.FONT_HERSHEY_SIMPLEX, font_scale, 1)
-                
-                # Draw background for text
-                cv2.rectangle(annotated_img, (x1, y1 - 20), (x1 + w, y1), color, -1)
-                # Draw text
-                cv2.putText(annotated_img, label_text, (x1, y1 - 5), 
-                            cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), 1)
+            # Add to data table
+            detections_data.append({
+                "Type": label_name,
+                "Confidence": f"{conf:.2%}",
+                "Location": f"[{int(x1)}, {int(y1)}, {int(x2)}, {int(y2)}]"
+            })
 
-            st.toast(f"Detectie completa: {len(boxes)} obiecte gasite.")
-        else:
-            st.warning("Nu au fost detectate obiecte.")
-
-        # 5. Resize the ANNOTATED image for display
-        display_annotated = resize_for_display(annotated_img, DISPLAY_WIDTH)
-
+        # Display Result in Column 2
+        display_annotated = resize_image(annotated_pil, DISPLAY_WIDTH)
         with col2:
-            st.subheader("Rezultat Vizual")
-            st.image(display_annotated, width=DISPLAY_WIDTH)
+            st.subheader("Defect Detection")
+            st.image(display_annotated)
+        
+        # Display Success Message & Table
+        st.success(f"Detected {len(boxes)} defects.")
+        st.dataframe(detections_data, use_container_width=True)
 
-        # Tabel date
-        if len(boxes) > 0:
-            st.divider()
-            st.subheader("Date Detectie")
-            data = []
-            for box in boxes:
-                row = {
-                    "Clasa": result.names[int(box.cls[0])],
-                    "Incredere": f"{float(box.conf[0]):.2%}",
-                    "Coordonate": f"[{int(box.xyxy[0][0])}, {int(box.xyxy[0][1])} ...]"
-                }
-                data.append(row)
-            st.dataframe(data, use_container_width=True)
+    else:
+        # No defects found
+        with col2:
+            st.subheader("Result")
+            st.image(display_img) # Show clean image
+            st.info("No defects detected (Clean Surface).")
+
+# --- 3. TRAINING ANALYTICS SECTION ---
+st.divider()
+st.header("Training Analytics")
+
+if df_history is not None:
+    tab1, tab2 = st.tabs(["Error Graphs (Loss)", "Accuracy Curves"])
+
+    with tab1:
+        st.subheader("Training vs Validation Loss")
+        st.write("Lower values indicate better performance.")
+        loss_data = df_history[['epoch', 'train/box_loss', 'val/box_loss', 'train/cls_loss', 'val/cls_loss']].set_index('epoch')
+        st.line_chart(loss_data)
+
+    with tab2:
+        st.subheader("Accuracy (mAP) over Epochs")
+        st.write("Higher values indicate better accuracy.")
+        acc_data = df_history[['epoch', 'metrics/mAP50(B)', 'metrics/mAP50-95(B)']].set_index('epoch')
+        st.line_chart(acc_data)
+else:
+    st.warning("Training history not found. Run 'export_history.py' first.")

@@ -1,16 +1,15 @@
 {
-    "model_name": "defect_detector_ult",
-    "epoch": 150,
-    "accuracy": 0.72276,
-    "f1_score": 0.6646064405276411,
-    "train_box_loss": 1.06825,
-    "train_cls_loss": 0.82565,
-    "val_box_loss": 1.6468,
-    "val_cls_loss": 1.27431,
-    "metrics": {
-        "precision": 0.68551,
-        "recall": 0.64494,
-        "mAP_50": 0.72276,
-        "mAP_50_95": 0.37393
+    "model": "defect_detector_ult.pt",
+    "test_accuracy": 0.7348,
+    "test_f1_macro": 0.6844,
+    "test_precision_macro": 0.663,
+    "test_recall_macro": 0.7072,
+    "false_negative_rate": 0.2928,
+    "false_positive_rate": 0.337,
+    "inference_latency_ms": 35,
+    "improvement_vs_baseline": {
+        "accuracy": "+2.0%",
+        "f1_score": "+-0.8%",
+        "latency": "-80%"
     }
 }
