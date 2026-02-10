@@ -78,7 +78,7 @@ def export_history():
 
         # 5. Build the Exact JSON Structure
         metrics_data = {
-            "model": "defect_detector_ult.pt",
+            "model": "defect_detector_ult",
             "test_accuracy": round(accuracy, 4),
             "test_f1_macro": round(f1_score, 4),
             "test_precision_macro": round(precision, 4),

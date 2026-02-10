@@ -1,0 +1,7 @@
+<annotation>
+    <filename>aug_patches_71_423.jpg</filename>
+    <size><width>200</width><height>200</height><depth>3</depth></size>
+    <segmented>0</segmented>
+    <object><name>patches</name><bndbox><xmin>61</xmin><ymin>6</ymin><xmax>140</xmax><ymax>162</ymax></bndbox></object>
+    <object><name>patches</name><bndbox><xmin>12</xmin><ymin>0</ymin><xmax>168</xmax><ymax>106</ymax></bndbox></object>
+</annotation>

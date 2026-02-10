@@ -1,0 +1,16 @@
+Model Name,epochs,batch,imgsz,optimizer,lr0,lrf,momentum,weight_decay,warmup_epochs,cos_lr,box,cls,dfl,close_mosaic
+defect_detector,100,16,200,auto,0.01,0.01,0.937,0.0005,3.0,False,7.5,0.5,1.5,10
+defect_detector2,100,16,200,auto,0.01,0.01,0.937,0.0005,3.0,False,7.5,0.5,1.5,10
+defect_detector3,100,16,200,auto,0.01,0.01,0.937,0.0005,3.0,False,7.5,0.5,1.5,10
+defect_detector_HD,100,2,832,auto,0.01,0.01,0.937,0.0005,3.0,False,7.5,0.5,1.5,10
+defect_detector_HD10,100,2,832,auto,0.01,0.01,0.937,0.0005,3.0,False,7.5,0.5,1.5,10
+defect_detector_HD2,100,1,1024,auto,0.01,0.01,0.937,0.0005,3.0,False,7.5,0.5,1.5,10
+defect_detector_HD3,100,1,1024,auto,0.01,0.01,0.937,0.0005,3.0,False,7.5,0.5,1.5,10
+defect_detector_HD4,100,2,1024,auto,0.01,0.01,0.937,0.0005,3.0,False,7.5,0.5,1.5,10
+defect_detector_HD5,100,2,1024,auto,0.01,0.01,0.937,0.0005,3.0,False,7.5,0.5,1.5,10
+defect_detector_HD6,100,2,832,auto,0.01,0.01,0.937,0.0005,3.0,False,7.5,0.5,1.5,10
+defect_detector_HD7,100,2,832,auto,0.01,0.01,0.937,0.0005,3.0,False,7.5,0.5,1.5,10
+defect_detector_HD8,100,2,832,auto,0.01,0.01,0.937,0.0005,3.0,False,7.5,0.5,1.5,10
+defect_detector_HD9,100,2,832,auto,0.01,0.01,0.937,0.0005,3.0,False,7.5,0.5,1.5,10
+defect_detector_ult,150,16,832,AdamW,0.0005,0.01,0.937,0.0005,3.0,True,7.5,0.5,1.5,10
+surface_defect_model,100,16,640,auto,0.01,0.01,0.937,0.0005,3.0,False,7.5,0.5,1.5,10

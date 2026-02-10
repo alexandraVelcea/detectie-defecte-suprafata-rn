@@ -15,3 +15,7 @@ pandas
 scipy
 tqdm
 pyyaml
+
+# --- UI & Deployment ---
+streamlit
+watchdog
