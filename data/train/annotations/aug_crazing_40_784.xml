@@ -1,8 +1,0 @@
-<annotation>
-    <filename>aug_crazing_40_784.jpg</filename>
-    <size><width>200</width><height>200</height><depth>3</depth></size>
-    <segmented>0</segmented>
-    <object><name>crazing</name><bndbox><xmin>27</xmin><ymin>115</ymin><xmax>145</xmax><ymax>185</ymax></bndbox></object>
-    <object><name>crazing</name><bndbox><xmin>146</xmin><ymin>3</ymin><xmax>194</xmax><ymax>164</ymax></bndbox></object>
-    <object><name>crazing</name><bndbox><xmin>140</xmin><ymin>31</ymin><xmax>197</xmax><ymax>103</ymax></bndbox></object>
-</annotation>

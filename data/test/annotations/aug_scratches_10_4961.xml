@@ -1,0 +1,10 @@
+<annotation>
+    <filename>aug_scratches_10_4961.jpg</filename>
+    <size><width>200</width><height>200</height><depth>3</depth></size>
+    <segmented>0</segmented>
+    <object><name>scratches</name><bndbox><xmin>1</xmin><ymin>151</ymin><xmax>199</xmax><ymax>180</ymax></bndbox></object>
+    <object><name>scratches</name><bndbox><xmin>82</xmin><ymin>88</ymin><xmax>116</xmax><ymax>127</ymax></bndbox></object>
+    <object><name>scratches</name><bndbox><xmin>191</xmin><ymin>0</ymin><xmax>200</xmax><ymax>10</ymax></bndbox></object>
+    <object><name>scratches</name><bndbox><xmin>147</xmin><ymin>174</ymin><xmax>195</xmax><ymax>200</ymax></bndbox></object>
+    <object><name>scratches</name><bndbox><xmin>38</xmin><ymin>31</ymin><xmax>87</xmax><ymax>105</ymax></bndbox></object>
+</annotation>

@@ -1,0 +1,10 @@
+<annotation>
+    <filename>aug_inclusion_32_5511.jpg</filename>
+    <size><width>200</width><height>200</height><depth>3</depth></size>
+    <segmented>0</segmented>
+    <object><name>inclusion</name><bndbox><xmin>72</xmin><ymin>12</ymin><xmax>94</xmax><ymax>62</ymax></bndbox></object>
+    <object><name>inclusion</name><bndbox><xmin>67</xmin><ymin>59</ymin><xmax>97</xmax><ymax>184</ymax></bndbox></object>
+    <object><name>inclusion</name><bndbox><xmin>148</xmin><ymin>123</ymin><xmax>152</xmax><ymax>163</ymax></bndbox></object>
+    <object><name>inclusion</name><bndbox><xmin>153</xmin><ymin>18</ymin><xmax>160</xmax><ymax>59</ymax></bndbox></object>
+    <object><name>inclusion</name><bndbox><xmin>43</xmin><ymin>56</ymin><xmax>48</xmax><ymax>109</ymax></bndbox></object>
+</annotation>

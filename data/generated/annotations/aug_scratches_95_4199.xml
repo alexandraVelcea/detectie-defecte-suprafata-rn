@@ -1,0 +1,12 @@
+<annotation>
+    <filename>aug_scratches_95_4199.jpg</filename>
+    <size><width>200</width><height>200</height><depth>3</depth></size>
+    <segmented>0</segmented>
+    <object><name>scratches</name><bndbox><xmin>15</xmin><ymin>113</ymin><xmax>31</xmax><ymax>200</ymax></bndbox></object>
+    <object><name>scratches</name><bndbox><xmin>97</xmin><ymin>1</ymin><xmax>124</xmax><ymax>199</ymax></bndbox></object>
+    <object><name>scratches</name><bndbox><xmin>11</xmin><ymin>132</ymin><xmax>58</xmax><ymax>185</ymax></bndbox></object>
+    <object><name>scratches</name><bndbox><xmin>0</xmin><ymin>142</ymin><xmax>16</xmax><ymax>185</ymax></bndbox></object>
+    <object><name>scratches</name><bndbox><xmin>181</xmin><ymin>147</ymin><xmax>200</xmax><ymax>194</ymax></bndbox></object>
+    <object><name>scratches</name><bndbox><xmin>67</xmin><ymin>7</ymin><xmax>121</xmax><ymax>89</ymax></bndbox></object>
+    <object><name>scratches</name><bndbox><xmin>187</xmin><ymin>11</ymin><xmax>200</xmax><ymax>59</ymax></bndbox></object>
+</annotation>

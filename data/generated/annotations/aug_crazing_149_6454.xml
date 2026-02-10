@@ -1,0 +1,10 @@
+<annotation>
+    <filename>aug_crazing_149_6454.jpg</filename>
+    <size><width>200</width><height>200</height><depth>3</depth></size>
+    <segmented>0</segmented>
+    <object><name>crazing</name><bndbox><xmin>1</xmin><ymin>43</ymin><xmax>154</xmax><ymax>112</ymax></bndbox></object>
+    <object><name>crazing</name><bndbox><xmin>1</xmin><ymin>97</ymin><xmax>156</xmax><ymax>174</ymax></bndbox></object>
+    <object><name>crazing</name><bndbox><xmin>127</xmin><ymin>118</ymin><xmax>200</xmax><ymax>163</ymax></bndbox></object>
+    <object><name>crazing</name><bndbox><xmin>1</xmin><ymin>4</ymin><xmax>182</xmax><ymax>72</ymax></bndbox></object>
+    <object><name>crazing</name><bndbox><xmin>101</xmin><ymin>128</ymin><xmax>133</xmax><ymax>167</ymax></bndbox></object>
+</annotation>

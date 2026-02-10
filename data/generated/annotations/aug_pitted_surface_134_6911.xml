@@ -1,0 +1,11 @@
+<annotation>
+    <filename>aug_pitted_surface_134_6911.jpg</filename>
+    <size><width>200</width><height>200</height><depth>3</depth></size>
+    <segmented>0</segmented>
+    <object><name>pitted_surface</name><bndbox><xmin>18</xmin><ymin>25</ymin><xmax>144</xmax><ymax>162</ymax></bndbox></object>
+    <object><name>pitted_surface</name><bndbox><xmin>50</xmin><ymin>60</ymin><xmax>108</xmax><ymax>119</ymax></bndbox></object>
+    <object><name>pitted_surface</name><bndbox><xmin>0</xmin><ymin>95</ymin><xmax>40</xmax><ymax>150</ymax></bndbox></object>
+    <object><name>pitted_surface</name><bndbox><xmin>30</xmin><ymin>42</ymin><xmax>88</xmax><ymax>100</ymax></bndbox></object>
+    <object><name>pitted_surface</name><bndbox><xmin>117</xmin><ymin>153</ymin><xmax>174</xmax><ymax>200</ymax></bndbox></object>
+    <object><name>pitted_surface</name><bndbox><xmin>40</xmin><ymin>116</ymin><xmax>99</xmax><ymax>172</ymax></bndbox></object>
+</annotation>

@@ -1,0 +1,13 @@
+<annotation>
+    <filename>aug_rolled-in_scale_73_6043.jpg</filename>
+    <size><width>200</width><height>200</height><depth>3</depth></size>
+    <segmented>0</segmented>
+    <object><name>rolled-in_scale</name><bndbox><xmin>2</xmin><ymin>1</ymin><xmax>54</xmax><ymax>197</ymax></bndbox></object>
+    <object><name>rolled-in_scale</name><bndbox><xmin>49</xmin><ymin>6</ymin><xmax>131</xmax><ymax>63</ymax></bndbox></object>
+    <object><name>rolled-in_scale</name><bndbox><xmin>58</xmin><ymin>4</ymin><xmax>104</xmax><ymax>50</ymax></bndbox></object>
+    <object><name>rolled-in_scale</name><bndbox><xmin>81</xmin><ymin>35</ymin><xmax>137</xmax><ymax>91</ymax></bndbox></object>
+    <object><name>rolled-in_scale</name><bndbox><xmin>90</xmin><ymin>63</ymin><xmax>130</xmax><ymax>103</ymax></bndbox></object>
+    <object><name>rolled-in_scale</name><bndbox><xmin>98</xmin><ymin>63</ymin><xmax>184</xmax><ymax>149</ymax></bndbox></object>
+    <object><name>rolled-in_scale</name><bndbox><xmin>45</xmin><ymin>40</ymin><xmax>153</xmax><ymax>148</ymax></bndbox></object>
+    <object><name>rolled-in_scale</name><bndbox><xmin>23</xmin><ymin>109</ymin><xmax>81</xmax><ymax>167</ymax></bndbox></object>
+</annotation>

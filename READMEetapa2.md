@@ -51,7 +51,7 @@ project-name/
 
 ### 2.2 Caracteristicile dataset-ului
 
-* **Număr total de observații:** 
+* **Număr total de observații:** 1800 
 * **Număr de caracteristici (features):** 6
 * **Tipuri de date:** Imagini
 * **Format fișiere:** PNG
@@ -79,7 +79,6 @@ Pentru a înțelege natura datelor vizuale, s-au calculat următoarele statistic
 -   **Distribuția Claselor:**
 
     -   *Inițial (Raw):* Dezechilibru ușor între clase (variații între 250-300 imagini/clasă).
-
     -   *Final (După preprocesare):* **Distribuție perfect uniformă** (195 imagini pe fiecare clasă: 105 Train + 45 Val + 45 Test), eliminând bias-ul modelului către clasele majoritare.
 
 -   **Analiza Bounding Box-urilor (Ancore):**

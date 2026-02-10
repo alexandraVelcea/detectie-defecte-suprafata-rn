@@ -1,0 +1,7 @@
+<annotation>
+    <filename>aug_inclusion_121_9408.jpg</filename>
+    <size><width>200</width><height>200</height><depth>3</depth></size>
+    <segmented>0</segmented>
+    <object><name>inclusion</name><bndbox><xmin>74</xmin><ymin>94</ymin><xmax>133</xmax><ymax>187</ymax></bndbox></object>
+    <object><name>inclusion</name><bndbox><xmin>49</xmin><ymin>88</ymin><xmax>56</xmax><ymax>109</ymax></bndbox></object>
+</annotation>

@@ -23,11 +23,13 @@ FINAL_VAL_XML_DIR   = PROJECT_ROOT / "data" / "validation" / "annotations"
 FINAL_TEST_IMG_DIR  = PROJECT_ROOT / "data" / "test" / "images"
 FINAL_TEST_XML_DIR  = PROJECT_ROOT / "data" / "test" / "annotations"
 
-# Counts
-MOVE_FROM_TRAIN_TO_POOL = 30   # Move 30 from Train to "Pool"
-TARGET_VAL_COUNT        = 45   # Final Count for Validation
-TARGET_TEST_COUNT       = 45   # Final Count for Test
-AUGMENT_IN_TRAIN        = 105  # Images to process in Train
+# Targets
+TARGET_VAL_ORIGINALS  = 30   # Base number of REAL images for Validation
+TARGET_TEST_ORIGINALS = 30   # Base number of REAL images for Test
+# Train gets the rest
+
+# TARGET RATIO: 40% of the FINAL dataset must be augmented
+AUG_TARGET_RATIO = 0.40 
 
 CATEGORIES = [
     'crazing', 'inclusion', 'patches', 
@@ -185,144 +187,135 @@ DEFECT_MAP = {
     'scratches': simulate_scratches
 }
 
-# --- MAIN LOGIC ---
+# --- LOGIC HELPERS ---
 
-def move_file_pair(filename, src_img_dir, src_xml_dir, dest_img_dir, dest_xml_dir):
-    """Safely moves an image and its XML."""
+def copy_file_pair(filename, src_img_dir, src_xml_dir, dest_img_dir, dest_xml_dir):
+    """Copies file + XML to destination."""
     if not (src_img_dir / filename).exists():
-        return # Skip if source missing
-
-    # Move Image
-    shutil.move(str(src_img_dir / filename), str(dest_img_dir / filename))
+        return
+    shutil.copy(str(src_img_dir / filename), str(dest_img_dir / filename))
     
-    # Move XML
     xml_name = filename.replace(".jpg", ".xml").replace(".png", ".xml")
     if (src_xml_dir / xml_name).exists():
-        shutil.move(str(src_xml_dir / xml_name), str(dest_xml_dir / xml_name))
+        shutil.copy(str(src_xml_dir / xml_name), str(dest_xml_dir / xml_name))
 
-def process_category(category):
-    # Current Raw Paths
-    train_cat_img_dir = RAW_TRAIN_IMG_DIR / category
-    
-    # Validation Pool Logic
-    # (Assuming raw/validation is either flat or categorized, we handle categorized for input)
-    if (RAW_VAL_IMG_DIR / category).exists():
-        val_pool_src = RAW_VAL_IMG_DIR / category
-    else:
-        val_pool_src = RAW_VAL_IMG_DIR
-
-    if not train_cat_img_dir.exists(): 
+def augment_dataset(source_file_list, dest_img_dir, dest_xml_dir, category):
+    """
+    Generates synthetic images based on the source list provided.
+    Ensures final ratio of Augmented data is 40%.
+    """
+    num_originals = len(source_file_list)
+    if num_originals == 0:
         return
 
-    # --- STEP 1: MOVE 30 FROM TRAIN TO VAL POOL ---
-    # Identify clean originals
-    originals = [f for f in os.listdir(train_cat_img_dir) if f.lower().endswith(('.jpg', '.png')) and "aug_" not in f]
-    random.shuffle(originals)
+    # Calculate how many to generate
+    # Target: Aug = 40% of Total (Orig + Aug)
+    # Orig = 60% of Total -> Total = Orig / 0.6
+    final_total_target = int(num_originals / (1.0 - AUG_TARGET_RATIO))
+    num_to_augment = final_total_target - num_originals
     
-    to_move = originals[:MOVE_FROM_TRAIN_TO_POOL]
-    print(f"[{category}] Step 1: Moving {len(to_move)} images from Train -> Raw Validation Pool.")
-    
-    # Staging area for pool (temp use raw/validation/category)
-    (RAW_VAL_IMG_DIR / category).mkdir(parents=True, exist_ok=True)
-    
-    for f in to_move:
-        move_file_pair(f, train_cat_img_dir, RAW_TRAIN_XML_DIR, RAW_VAL_IMG_DIR / category, RAW_VAL_XML_DIR)
+    print(f"   -> Originals: {num_originals} | Generating {num_to_augment} augmented images.")
 
-    # --- STEP 2: SPLIT TOTAL POOL (45 Val / 45 Test) ---
-    pool_dir = RAW_VAL_IMG_DIR / category
-    pool_files = [f for f in os.listdir(pool_dir) if f.lower().endswith(('.jpg', '.png'))]
-    random.shuffle(pool_files)
-    
-    if len(pool_files) < (TARGET_VAL_COUNT + TARGET_TEST_COUNT):
-        print(f"Warning: Total pool for {category} is {len(pool_files)}. Splitting 50/50.")
-        val_set = pool_files[:len(pool_files)//2]
-        test_set = pool_files[len(pool_files)//2:]
-    else:
-        val_set = pool_files[:TARGET_VAL_COUNT]
-        test_set = pool_files[TARGET_VAL_COUNT : TARGET_VAL_COUNT + TARGET_TEST_COUNT]
-
-    print(f"[{category}] Step 2: Splitting Pool ({len(pool_files)}) -> {len(val_set)} Validation, {len(test_set)} Test.")
-
-    for f in val_set:
-        move_file_pair(f, pool_dir, RAW_VAL_XML_DIR, FINAL_VAL_IMG_DIR, FINAL_VAL_XML_DIR)
-        
-    for f in test_set:
-        move_file_pair(f, pool_dir, RAW_VAL_XML_DIR, FINAL_TEST_IMG_DIR, FINAL_TEST_XML_DIR)
-
-    # --- STEP 3: AUGMENT REMAINING TRAIN ---
-    remaining_train = [f for f in os.listdir(train_cat_img_dir) if f.lower().endswith(('.jpg', '.png')) and "aug_" not in f]
-    to_augment = remaining_train[:AUGMENT_IN_TRAIN]
-    
-    print(f"[{category}] Step 3: Augmenting {len(to_augment)} images in Train.")
-
-    for i, filename in enumerate(to_augment):
+    for i in range(num_to_augment):
         try:
-            file_path = train_cat_img_dir / filename
-            xml_path = RAW_TRAIN_XML_DIR / filename.replace(".jpg", ".xml")
+            # 1. Pick random original from the list
+            original_data = random.choice(source_file_list)
+            filename, _, _ = original_data
             
-            with Image.open(file_path) as img:
+            # Read from destination (since we copied originals there already)
+            src_img_path = dest_img_dir / filename
+            src_xml_path = dest_xml_dir / filename.replace(".jpg", ".xml").replace(".png", ".xml")
+            
+            with Image.open(src_img_path) as img:
                 img = img.convert("RGB")
-                old_boxes = get_boxes_from_xml(xml_path)
+                old_boxes = get_boxes_from_xml(src_xml_path)
                 
+                # 2. Simulate Defect
                 defect_func = DEFECT_MAP.get(category, simulate_scratches)
                 img_def, new_boxes = defect_func(img)
+                
+                # 3. General Augmentation
                 final_img = general_augmentations(img_def)
                 
-                aug_name = f"aug_{category}_{i}_{random.randint(100,999)}.jpg"
-                final_img.save(train_cat_img_dir / aug_name)
+                # 4. Save
+                aug_name = f"aug_{category}_{i}_{random.randint(1000,9999)}.jpg"
+                final_img.save(dest_img_dir / aug_name)
                 
                 all_boxes = old_boxes + new_boxes
                 aug_xml_content = create_xml_content(aug_name, final_img.width, final_img.height, category, all_boxes)
-                with open(RAW_TRAIN_XML_DIR / aug_name.replace(".jpg", ".xml"), "w") as f:
+                with open(dest_xml_dir / aug_name.replace(".jpg", ".xml"), "w") as f:
                     f.write(aug_xml_content)
-            
-            # Delete Original
-            os.remove(file_path)
-            if xml_path.exists():
-                os.remove(xml_path)
-
+                    
         except Exception as e:
-            print(f"Error augmenting {filename}: {e}")
+            print(f"Error augmenting: {e}")
 
-    # --- STEP 4: FLATTEN TO FINAL TRAIN FOLDER ---
-    # Move all files (which are now only augmented/valid training data) from raw/train/cat -> final/train
-    print(f"[{category}] Step 4: Moving & Flattening to {FINAL_TRAIN_IMG_DIR}")
+def process_category(category):
+    print(f"\n--- Processing: {category} ---")
     
-    # Re-scan for all images in this category folder (should be mostly augmented ones now)
-    all_final_files = [f for f in os.listdir(train_cat_img_dir) if f.lower().endswith(('.jpg', '.png'))]
+    # 1. Gather all available raw images (Pool)
+    raw_pool = []
+    if (RAW_TRAIN_IMG_DIR / category).exists():
+        raw_pool.extend([(f, RAW_TRAIN_IMG_DIR / category, RAW_TRAIN_XML_DIR) 
+                         for f in os.listdir(RAW_TRAIN_IMG_DIR / category) if f.lower().endswith(('.jpg', '.png'))])
+    if (RAW_VAL_IMG_DIR / category).exists():
+        raw_pool.extend([(f, RAW_VAL_IMG_DIR / category, RAW_VAL_XML_DIR) 
+                         for f in os.listdir(RAW_VAL_IMG_DIR / category) if f.lower().endswith(('.jpg', '.png'))])
     
-    for f in all_final_files:
-        move_file_pair(f, train_cat_img_dir, RAW_TRAIN_XML_DIR, FINAL_TRAIN_IMG_DIR, FINAL_TRAIN_XML_DIR)
+    if not raw_pool:
+        print(f"Skipping {category}: No images found.")
+        return
 
-    # Optional: Remove empty category folder in raw/train
-    try:
-        os.rmdir(train_cat_img_dir)
-    except: pass
+    random.shuffle(raw_pool)
+    print(f"Total Raw Images found: {len(raw_pool)}")
+
+    # 2. Split Data (Originals)
+    if len(raw_pool) < (TARGET_VAL_ORIGINALS + TARGET_TEST_ORIGINALS):
+        n_test = int(len(raw_pool) * 0.2)
+        n_val = int(len(raw_pool) * 0.2)
+    else:
+        n_test = TARGET_TEST_ORIGINALS
+        n_val = TARGET_VAL_ORIGINALS
+
+    test_set = raw_pool[:n_test]
+    val_set = raw_pool[n_test : n_test + n_val]
+    train_set = raw_pool[n_test + n_val:]
+
+    print(f"Originals Split -> Test: {len(test_set)} | Val: {len(val_set)} | Train: {len(train_set)}")
+
+    # 3. Copy Originals
+    for f_name, src_dir, src_xml_dir in test_set:
+        copy_file_pair(f_name, src_dir, src_xml_dir, FINAL_TEST_IMG_DIR, FINAL_TEST_XML_DIR)
+    for f_name, src_dir, src_xml_dir in val_set:
+        copy_file_pair(f_name, src_dir, src_xml_dir, FINAL_VAL_IMG_DIR, FINAL_VAL_XML_DIR)
+    for f_name, src_dir, src_xml_dir in train_set:
+        copy_file_pair(f_name, src_dir, src_xml_dir, FINAL_TRAIN_IMG_DIR, FINAL_TRAIN_XML_DIR)
+
+    # 4. Augment ALL sets (Test, Val, Train) to reach 40%
+    print(f"Augmenting TEST Set...")
+    augment_dataset(test_set, FINAL_TEST_IMG_DIR, FINAL_TEST_XML_DIR, category)
+    
+    print(f"Augmenting VAL Set...")
+    augment_dataset(val_set, FINAL_VAL_IMG_DIR, FINAL_VAL_XML_DIR, category)
+    
+    print(f"Augmenting TRAIN Set...")
+    augment_dataset(train_set, FINAL_TRAIN_IMG_DIR, FINAL_TRAIN_XML_DIR, category)
 
 def main():
-    # 1. Create Final Output Directories
+    # Create Dirs
     for d in [FINAL_TRAIN_IMG_DIR, FINAL_TRAIN_XML_DIR, 
               FINAL_VAL_IMG_DIR, FINAL_VAL_XML_DIR, 
               FINAL_TEST_IMG_DIR, FINAL_TEST_XML_DIR]:
         d.mkdir(parents=True, exist_ok=True)
     
-    # Ensure intermediate staging exists
-    RAW_VAL_XML_DIR.mkdir(parents=True, exist_ok=True)
+    print("--- STARTING DATASET GENERATION (Global 40% Augmentation) ---")
 
-    # 2. Process Each Category
     for cat in CATEGORIES:
         process_category(cat)
 
-    # 3. Cleanup Raw Train Root if empty
-    try:
-        if RAW_TRAIN_IMG_DIR.exists() and not any(RAW_TRAIN_IMG_DIR.iterdir()):
-             os.rmdir(RAW_TRAIN_IMG_DIR)
-    except: pass
-
-    print("\nProcess Complete!")
-    print(f"Train (Flattened): {FINAL_TRAIN_IMG_DIR}")
-    print(f"Validation:        {FINAL_VAL_IMG_DIR}")
-    print(f"Test:              {FINAL_TEST_IMG_DIR}")
+    print("\n✅ Process Complete!")
+    print(f"Train: {FINAL_TRAIN_IMG_DIR}")
+    print(f"Val:   {FINAL_VAL_IMG_DIR}")
+    print(f"Test:  {FINAL_TEST_IMG_DIR}")
 
 if __name__ == "__main__":
     main()

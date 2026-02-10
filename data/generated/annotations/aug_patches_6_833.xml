@@ -1,9 +1,0 @@
-<annotation>
-    <filename>aug_patches_6_833.jpg</filename>
-    <size><width>200</width><height>200</height><depth>3</depth></size>
-    <segmented>0</segmented>
-    <object><name>patches</name><bndbox><xmin>29</xmin><ymin>1</ymin><xmax>76</xmax><ymax>92</ymax></bndbox></object>
-    <object><name>patches</name><bndbox><xmin>116</xmin><ymin>1</ymin><xmax>174</xmax><ymax>53</ymax></bndbox></object>
-    <object><name>patches</name><bndbox><xmin>130</xmin><ymin>78</ymin><xmax>173</xmax><ymax>200</ymax></bndbox></object>
-    <object><name>patches</name><bndbox><xmin>7</xmin><ymin>3</ymin><xmax>141</xmax><ymax>137</ymax></bndbox></object>
-</annotation>

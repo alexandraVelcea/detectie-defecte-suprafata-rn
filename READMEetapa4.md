@@ -29,8 +29,8 @@ Trebuie să livrați un SCHELET COMPLET și FUNCȚIONAL al întregului Sistem cu
 |---------------------|-------------------------------------|--------------------------|
 | **Generare imagini** | Generare a minim 40% din imaginile de antrenare și a adnotărilor asociate | Imagini .png cu adnotări în fișiere xml |
 
-**Total observații finale:** ~250 imagini (estimat pentru final)
-**Observații originale:** ~100+ imagini / categorie (40%+)
+**Total observații finale:** ~3000 imagini (estimat pentru final)
+**Observații originale:** ~1200+ imagini / categorie (40%+)
 
 **Tipul contribuției:**
 [ ] Date generate prin simulare fizică
@@ -87,9 +87,9 @@ S-a ales o arhitectură orientată pe evenimente (Event-Driven), specifică apli
 | **2. Neural Network** | Python (`ultralytics` YOLOv8) | **Funcțional.** Arhitectura este definită (YOLOv8n), fișierul de config `data.yaml` este creat, antrenamentul poate fi inițiat. |
 | **3. Web Service / UI** | Python (`matplotlib`/`opencv`/ Streamlit) | **Funcțional** Script de inferență care ia o imagine, rulează modelul și afișează rezultatul cu bounding boxes. |
 
-**Total observații finale:** ~1200 imagini
+**Total observații finale:** ~3000 imagini
 
-**Observații originale (Sintetice):** 630 imagini (6 clase × 105 imagini) -> **~50% din total**
+**Observații originale (Sintetice):** 1200 imagini (6 clase × 200 imagini) -> **~40% din total**
 
 **Tipul contribuției:**
 
@@ -130,7 +130,7 @@ detectie-defecte-suprafata/
 │   └── data.yaml             # Configurare pentru YOLO
 ├── src/
 │   ├── data_acquisition/
-│   │   └── generate_data.py  # Scriptul de generare imagini (Modul 1)
+│   │   └── generate_augmentation.py  # Scriptul de generare imagini (Modul 1)
 │   └── neural_network/
 │       ├── train.py     # Script antrenament (Modul 2)
 │       ├── detect.py         # Script inferență
