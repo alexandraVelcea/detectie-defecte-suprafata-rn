@@ -2,6 +2,8 @@ from ultralytics import YOLO
 from pathlib import Path
 import sys
 
+# ---------- COD PENTRU ANTRNARE OPTIMIZATĂ ----------
+
 # --- CONFIGURARE ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 YAML_PATH = PROJECT_ROOT / "results" / "data_colab.yaml" # Asigură-te că e calea corectă!
@@ -32,12 +34,12 @@ def train_ultimate():
         batch=16,               # Putem duce Batch 16 pe Medium cu 15GB
         nbs=64,                 # Nominal Batch Size pentru stabilitate
         
-        # --- 3. Hiperparametri Avansați (The Secret Sauce) ---
+        # --- 3. Hiperparametri Avansați ---
         optimizer='AdamW',      # Cel mai bun pentru convergență pe date complexe
         lr0=0.0005,             # Learning rate mai mic pentru modelul mare (previne oscilațiile)
         cos_lr=True,            # Scade fin la final pentru maximizarea mAP
         
-        # --- 4. Augmentări "Agresive" (Boost F1 Score) ---
+        # --- 4. Augmentări ---
         # Acestea creează date noi "dificile" pentru a forța modelul să fie robust
         mosaic=1.0,             # Standard YOLO (4 imagini în 1)
         mixup=0.15,             # [NOU] Amestecă 2 imagini (15% șansă). Ajută enorm la generalizare.

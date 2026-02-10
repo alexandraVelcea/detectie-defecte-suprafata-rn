@@ -478,8 +478,8 @@ pip >= 21.0
 
 ```bash
 # 1. Clonare repository
-git clone [URL_REPOSITORY]
-cd proiect-rn-[nume-prenume]
+git clone https://github.com/alexandraVelcea/detectie-defecte-suprafata-rn
+cd detectie-defecte-suprafata-rn
 
 # 2. Creare mediu virtual (recomandat)
 python -m venv venv
@@ -538,8 +538,6 @@ python src/neural_network/evaluate.py --model models/optimized_model.h5 --quick-
 
 ### 10.2 Ce NU Funcționează – Limitări Cunoscute
 
-*[Fiți onești - evaluatorul apreciază identificarea clară a limitărilor]*
-
 -   **Sensibilitate Excesivă la Texturi (High False Positive Rate - Crazing):**
 
     -   Modelul are o dificultate majoră în a distinge textura naturală, rugoasă a oțelului (*Background*) de defectul *Crazing*. Matricea de confuzie arată că **44%** din imaginile curate au fost clasificate greșit ca având acest defect. Acest lucru duce la opriri inutile ale liniei de producție.
@@ -559,17 +557,17 @@ python src/neural_network/evaluate.py --model models/optimized_model.h5 --quick-
 
 ### 10.3 Lecții Învățate (Top 5)
 
-1. **[Lecție 1]:** [ex: Importanța EDA înainte de antrenare - am descoperit 8% valori lipsă care afectau convergența]
-2. **[Lecție 2]:** [ex: Early stopping a prevenit overfitting sever - fără el, val_loss creștea după epoca 20]
-3. **[Lecție 3]:** [ex: Augmentările specifice domeniului (zgomot gaussian calibrat) au adus +5% accuracy vs augmentări generice]
-4. **[Lecție 4]:** [ex: Threshold-ul default 0.5 nu e optim pentru clase dezechilibrate - ajustarea la 0.35 a redus FN cu 40%]
-5. **[Lecție 5]:** [ex: Documentarea incrementală (la fiecare etapă) a economisit timp major la integrare finală]
+1. **Impactul Rezoluției:** Creșterea rezoluției de intrare (la 832px) a avut un impact mult mai mare asupra detectării defectelor de textură (`pitted_surface`) decât simpla creștere a complexității modelului (Nano -> Medium). Detaliile fine se pierd la rezoluții standard (640px).
+2. **Contextul Fizic în Augmentări:** Augmentările trebuie să reflecte realitatea fizică a obiectului. Activarea `FlipUD` (răsturnare verticală) a fost crucială deoarece foile de metal nu au o orientare "sus/jos" fixă, spre deosebire de obiectele din natură (oameni, mașini).
+3. **Data-Centric AI:** Cele mai mari salturi de performanță au venit din curățarea datelor și îmbunătățirea calității imaginilor (crop, augmentare), nu din modificarea hiperparametrilor de antrenare (Learning Rate).
+4. **Constrângeri hardware:** Latența de inferență crește exponențial cu rezoluția. Există un compromis dur între acuratețe maximă și timp real (35ms fiind limita acceptabilă pe GPU T4).
+5. **Vizualizare pentru operator:** Feedback-ul vizual (eliminarea butonului "Run", afișarea automată a rezultatelor) este esențial pentru ca unealta să fie acceptată și testată ușor de utilizatorii non-tehnici.
 
 ### 10.4 Retrospectivă
 
 **Ce ați schimba dacă ați reîncepe proiectul?**
 
-*[1-2 paragrafe: Decizii pe care le-ați lua diferit, cu justificare bazată pe experiența acumulată]*
+Pentru eficientizarea SIA, acumularea datelor de antrenare din mai multe seturi ar schimba rezultatul inferenței. Pentru antrenare, folosirea hiperparametrilor de la primele execuții ar fi ajutat la atingerea obiectivelor tehnice. De asemenea, documentarea incrementală ar fi ajutat la urmărirea corespunzătoare a progresului.
 
 [Completați aici]
 

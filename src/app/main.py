@@ -2,6 +2,8 @@ import sys
 from pathlib import Path
 from streamlit.web import cli as stcli
 
+# ---------- MAIN ENTRY POINT ----------
+
 def main():
     """
     Entry point to run the Streamlit application programmatically.

@@ -5,6 +5,12 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
+# ---------- COD PENTRU GENERARE STATISTICI: ----------
+
+# ---------- docs/optimization/f1_comparison.png ----------
+
+# ---------- docs/optimization/accuracy_comparison.png ----------
+
 # --- CONFIGURARE ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 MODELS_DIR = PROJECT_ROOT / "models"

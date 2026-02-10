@@ -3,6 +3,8 @@ import cv2
 import sys
 import os
 
+# ---------- INFERENȚĂ ÎN CONSOLĂ ----------
+
 def detect_defects(image_path):
     # 1. Load YOUR trained model
     # After training, the best model is saved here. Update path if needed.

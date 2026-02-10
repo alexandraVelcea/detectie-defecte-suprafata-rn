@@ -6,6 +6,8 @@ import json
 import os
 import random
 
+# ---------- COD APLICAȚIE OPTIMIZATĂ ----------
+
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="NEU-DET Surface Defect Detector", layout="wide")
 

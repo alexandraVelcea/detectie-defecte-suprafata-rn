@@ -6,6 +6,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from PIL import Image, ImageEnhance, ImageDraw, ImageFilter
 
+# ---------- COD AUGMENTARE, DISTRIBUIRE DATE ----------
+
 # --- CONFIGURATION ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 

@@ -4,6 +4,10 @@ import json
 import matplotlib.pyplot as plt
 from pathlib import Path
 
+# ---------- COD PENTRU GENERARE STATISTICI: ----------
+
+# ---------- results/test_metrics.json ----------
+
 # --- CONFIGURATION ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 

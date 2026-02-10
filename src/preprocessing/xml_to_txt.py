@@ -3,6 +3,8 @@ import yaml
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+# ---------- CONVERSIE .XML --> .TXT ----------
+
 # --- CONFIGURATION ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 DATA_ROOT = PROJECT_ROOT / "data"

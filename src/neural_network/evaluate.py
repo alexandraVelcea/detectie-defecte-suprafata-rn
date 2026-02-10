@@ -3,6 +3,12 @@ import shutil
 import json
 from pathlib import Path
 
+# ---------- COD PENTRU GENERARE STATISTICI: ----------
+
+# ---------- docs/results/loss_curve.png ----------
+
+# ---------- docs/confusion_matrix.png ----------
+
 # --- CONFIGURATION ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 

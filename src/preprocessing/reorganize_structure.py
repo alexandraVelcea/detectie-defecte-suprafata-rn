@@ -2,6 +2,8 @@ import os
 import shutil
 from pathlib import Path
 
+# ---------- REORGANIZARE STRUCTURĂ DATE ----------
+
 # --- CONFIGURATION ---
 PROJECT_ROOT = Path(os.getcwd())
 BASE_RAW = PROJECT_ROOT / "data" / "raw"

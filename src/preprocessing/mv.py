@@ -2,6 +2,8 @@ import os
 import shutil
 from pathlib import Path
 
+# ---------- REORGANIZARE STRUCTURĂ DATE ----------
+
 # --- CONFIGURATION ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 

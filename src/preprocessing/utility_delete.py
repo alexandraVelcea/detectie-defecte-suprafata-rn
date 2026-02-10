@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+# ---------- COD PENTRU ȘTERGEREA DATELOR AUGMENTATE ----------
+
 # --- CONFIGURATION ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -9,15 +11,15 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
 
 def delete_all_augmented_data():
-    print(f"--- 🗑️  DELETING ALL AUGMENTED DATA (aug_*) ---")
+    print(f"--- DELETING ALL AUGMENTED DATA (aug_*) ---")
     print(f"Target Scope: {DATA_DIR} (and all subfolders)")
     
     if not DATA_DIR.exists():
-        print(f"❌ Error: Data directory {DATA_DIR} does not exist.")
+        print(f"Error: Data directory {DATA_DIR} does not exist.")
         return
 
     # Safety Confirmation
-    confirm = input("\n⚠️  WARNING: This will permanently delete ALL files starting with 'aug_' (images, xml, txt).\nAre you sure? (yes/no): ")
+    confirm = input("\nWARNING: This will permanently delete ALL files starting with 'aug_' (images, xml, txt).\nAre you sure? (yes/no): ")
     if confirm.lower() != "yes":
         print("Operation cancelled.")
         return
@@ -58,10 +60,10 @@ def delete_all_augmented_data():
                         print(f"   Deleted {total_deleted} files...")
 
                 except Exception as e:
-                    print(f"❌ Error deleting {filename}: {e}")
+                    print(f"Error deleting {filename}: {e}")
 
     print("-" * 30)
-    print("✅ CLEANUP COMPLETE.")
+    print("CLEANUP COMPLETE.")
     print(f"   Total Files Deleted: {total_deleted}")
     print(f"   Breakdown:")
     print(f"     - Images: {counts['images']}")
