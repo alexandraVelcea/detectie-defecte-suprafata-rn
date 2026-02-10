@@ -371,7 +371,7 @@ proiect-rn-[nume-prenume]/
 │       └── f1_comparison.png               # Comparație F1 experimente
 │
 ├── data/
-│   ├── README.md             ***              # Descriere detaliată dataset
+│   ├── README.md                           # Descriere detaliată dataset
 │   ├── raw/                                # Date brute originale
 │   ├── processed/                          # Date curățate și transformate
 │   ├── generated/                          # Date originale (contribuția ≥40%)
@@ -381,7 +381,7 @@ proiect-rn-[nume-prenume]/
 │
 ├── src/
 │   ├── data_acquisition/                   # MODUL 1: Generare/Achiziție date
-│   │   ├── README.md         ***              # Documentație modul
+│   │   ├── README.md                       # Documentație modul
 │   │   ├── generate.py                     # Script generare date originale
 │   │   └── [alte scripturi achiziție]
 │   │
@@ -392,7 +392,7 @@ proiect-rn-[nume-prenume]/
 │   │   └── combine_datasets.py             # Combinare date originale + externe
 │   │
 │   ├── neural_network/                     # MODUL 2: Model RN
-│   │   ├── README.md           ***            # Documentație arhitectură RN
+│   │   ├── README.md                       # Documentație arhitectură RN
 │   │   ├── model.py                        # Definire arhitectură (Etapa 4)
 │   │   ├── train.py                        # Script antrenare (Etapa 5)
 │   │   ├── evaluate.py                     # Script evaluare metrici (Etapa 5)
@@ -400,7 +400,7 @@ proiect-rn-[nume-prenume]/
 │   │   └── visualize.py                    # Generare grafice și vizualizări
 │   │
 │   └── app/                                # MODUL 3: UI/Web Service
-│       ├── README.md         ***              # Instrucțiuni lansare aplicație
+│       ├── README.md                       # Instrucțiuni lansare aplicație
 │       └── main.py                         # Aplicație principală
 │
 ├── models/
@@ -414,7 +414,7 @@ proiect-rn-[nume-prenume]/
 │   ├── test_metrics.json                   # Metrici baseline test set (Etapa 5)
 │   ├── optimization_experiments.csv        # Toate experimentele optimizare (Etapa 6)
 │   ├── final_metrics.json                  # Metrici finale model optimizat (Etapa 6)
-│   └── error_analysis.json       ***          # Analiza detaliată erori (Etapa 6)
+│   └── error_analysis.json       **          # Analiza detaliată erori (Etapa 6)
 │
 ├── config/
 │   ├── preprocessing_params.pkl            # Parametri preprocesare salvați (Etapa 3)
@@ -612,15 +612,15 @@ Pentru eficientizarea SIA, acumularea datelor de antrenare din mai multe seturi 
 - [x] **README.md** complet (toate secțiunile completate cu date reale)
 - [x] **4 README-uri etape** prezente în `docs/` (etapa3, etapa4, etapa5, etapa6)
 - [x] **Screenshots** prezente în `docs/screenshots/`
-- [ ] **Structura repository** conformă cu Secțiunea 8
+- [x] **Structura repository** conformă cu Secțiunea 8
 - [x] **requirements.txt** actualizat și funcțional
-- [ ] **Cod comentat** (minim 15% linii comentarii relevante)
+- [x] **Cod comentat** (minim 15% linii comentarii relevante)
 - [x] **Toate path-urile relative** (nu absolute: `/Users/...` sau `C:\...`)
 
 ### Acces și Versionare
 
 - [x] **Repository accesibil** cadrelor didactice RN (public sau privat cu acces)
-- [ ] **Tag `v0.6-optimized-final`** creat și pushed
+- [x] **Tag `v0.6-optimized-final`** creat și pushed
 - [x] **Commit-uri incrementale** vizibile în `git log` (nu 1 commit gigantic)
 - [x] **Fișiere mari** (>100MB) excluse sau în `.gitignore`
 
@@ -628,7 +628,7 @@ Pentru eficientizarea SIA, acumularea datelor de antrenare din mai multe seturi 
 
 - [x] Model antrenat **de la zero** (weights inițializate random, nu descărcate)
 - [x] **Minimum 40% date originale** (nu doar subset din dataset public)
-- [ ] Cod propriu sau clar atribuit (surse citate în Bibliografie)
+- [x] Cod propriu sau clar atribuit (surse citate în Bibliografie)
 
 ---
 

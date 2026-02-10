@@ -74,4 +74,5 @@ Rezultatele antrenamentului vor fi salvate automat în directorul `models/defect
 - `gen_comparison_metrics.py`: Script pentru generare `docs/results/metrics_evolution.png`;
 - `gen_opt_experiments.py`: Script pentru generare `results/optimization_experiments.csv`;
 - `gen_plots.py`: Script pentru generare `docs/optimization/f1_comparison.png` și `docs/optimization/accuracy_comparison.png`;
-- `test_metrics.py`: Script pentru generarea `results/test_metrics.json`.
+- `test_metrics.py`: Script pentru generarea `results/test_metrics.json`;
+- `get_error_analysis.py`: Script pentru generarea `error_analysis.py`.

@@ -442,7 +442,7 @@ Salvați în `docs/results/`:
 - [x] State Machine implementat și actualizat
 - [x] Pipeline end-to-end testat și documentat
 - [x] UI demonstrativ cu inferență reală
-- [ ] Documentație completă pe toate etapele
+- [x] Documentație completă pe toate etapele
 
 ### Obiective parțial atinse:
 - [x] **Robustețe la iluminare extremă:** Deși augmentările `HSV` au îmbunătățit detecția, modelul încă are dificultăți (False Negatives) pe imagini sever subexpuse (întunecate) fără pre-procesare externă (CLAHE).
@@ -707,19 +707,19 @@ python src/neural_network/visualize.py --all
 ### Actualizare Aplicație Software
 - [x] Tabel modificări aplicație completat
 - [x] UI încarcă modelul OPTIMIZAT (nu cel din Etapa 5)
-- [ ] Screenshot `docs/screenshots/inference_optimized.png`
+- [x] Screenshot `docs/screenshots/inference_optimized.png`
 - [x] Pipeline end-to-end re-testat și funcțional
 
 ### Concluzii
 - [x] Secțiune evaluare performanță finală completată
 - [x] Limitări identificate și documentate
 - [x] Lecții învățate (minimum 5)
-- [ ] Plan post-feedback scris
+- [x] Plan post-feedback scris
 
 ### Verificări Tehnice
 - [x] `requirements.txt` actualizat
-- [ ] Toate path-urile RELATIVE
-- [ ] Cod nou comentat (minimum 15%)
+- [x] Toate path-urile RELATIVE
+- [x] Cod nou comentat (minimum 15%)
 - [x] `git log` arată commit-uri incrementale
 - [x] Verificare anti-plagiat respectată
 
@@ -728,14 +728,14 @@ python src/neural_network/visualize.py --all
 - [x] README Etapa 4 actualizat (dacă s-a modificat arhitectura/State Machine)
 - [x] README Etapa 5 actualizat (dacă s-au modificat parametri antrenare)
 - [x] `docs/state_machine.*` actualizat pentru a reflecta versiunea finală
-- [ ] Toate fișierele de configurare sincronizate cu modelul optimizat
+- [x] Toate fișierele de configurare sincronizate cu modelul optimizat
 
 ### Pre-Predare
-- [ ] `etapa6_optimizare_concluzii.md` completat cu TOATE secțiunile
-- [ ] Structură repository conformă modelului de mai sus
-- [ ] Commit: `"Etapa 6 completă – Accuracy=X.XX, F1=X.XX (optimizat)"`
-- [ ] Tag: `git tag -a v0.6-optimized-final -m "Etapa 6 - Model optimizat + Concluzii"`
-- [ ] Push: `git push origin main --tags`
+- [x] `etapa6_optimizare_concluzii.md` completat cu TOATE secțiunile
+- [x] Structură repository conformă modelului de mai sus
+- [x] Commit: `"Etapa 6 completă – Accuracy=X.XX, F1=X.XX (optimizat)"`
+- [x] Tag: `git tag -a v0.6-optimized-final -m "Etapa 6 - Model optimizat + Concluzii"`
+- [x] Push: `git push origin main --tags`
 - [x] Repository accesibil (public sau privat cu acces profesori)
 
 ---
