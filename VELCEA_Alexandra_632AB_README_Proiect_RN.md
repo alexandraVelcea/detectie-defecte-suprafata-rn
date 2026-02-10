@@ -262,13 +262,13 @@ Modelul **defect_detector_ult** a fost selectat ca soluție finală deoarece a d
 
 ### 6.3 Analiza Top 5 Erori
 
-| # | Input (descriere scurtă) | Predicție RN | Clasă Reală | Cauză Probabilă | Implicație Industrială |
-|---|--------------------------|--------------|-------------|-----------------|------------------------|
-| 1 | [ex: Imagine sudură cu iluminare slabă] | [Clasa X] | [Clasa Y] | [ex: Contrast insuficient în zona defectului] | [ex: Defect nedetectat → produs defect la client] |
-| 2 | [Completați] | [Completați] | [Completați] | [Completați] | [Completați] |
-| 3 | [Completați] | [Completați] | [Completați] | [Completați] | [Completați] |
-| 4 | [Completați] | [Completați] | [Completați] | [Completați] | [Completați] |
-| 5 | [Completați] | [Completați] | [Completați] | [Completați] | [Completați] |
+| **#** | **Input (descriere scurtă)** | **Predicție RN** | **Clasă Reală** | **Cauză Probabilă** | **Implicație Industrială** |
+| --- | --- | --- | --- | --- | --- |
+| **1** | Imagine "curată" dar cu textură rugoasă a oțelului. | **Crazing** (False Positive) | **Background** (OK) | **Overfitting pe textură:** Modelul interpretează rugozitatea naturală ca fiind micro-fisuri (*Crazing*). | Oprire inutilă a benzii de producție → **Costuri operaționale nejustificate**. |
+| **2** | Zgârietură fină, superficială, contrast scăzut. | **Background** (False Negative) | **Scratches** | **Rezoluție/Contrast:** Defectul s-a pierdut la redimensionare sau contrastul este sub pragul de activare al filtrelor. | Piesă defectă trimisă la client → **Risc de reclamație și penalizări**. |
+| **3** | Pată de ulei sau praf pe suprafață (non-defect). | **Inclusion** | **Background** | **Lipsă date negative:** Modelul nu a fost antrenat cu exemple de "murdărie" care nu sunt defecte reale. | Clasificare greșită a pieselor bune → **Scăderea randamentului (Yield)**. |
+| **4** | Defect de tip solzi (*scale*) într-o zonă umbrită. | **Background** | **Rolled-in_scale** | **Iluminare neuniformă:** Rețeaua nu a extras trăsăturile corecte din cauza subexpunerii locale. | Defect structural ratat → **Risc de rupere la prelucrare ulterioară**. |
+| **5** | Imagine cu defecte multiple suprapuse. | **Patches** (Doar unul) | **Patches + Scratches** | **Non-Maximum Suppression (NMS):** Cutia mare a defectului dominant a suprimat detecția defectului mai mic. | Evaluare incorectă a severității → **Raportare statistică eronată**. |
 
 ### 6.4 Validare în Context Industrial
 
@@ -320,7 +320,7 @@ Performanță: Sidebar-ul confirmă metricile finale ale modelului: o acuratețe
 
 ### 7.3 Demonstrație Funcțională End-to-End
 
-**Locație dovadă:** `docs/demo/` *(GIF / Video / Secvență screenshots)*
+**Locație dovadă:** `docs/demo/` *(Video)*
 
 **Fluxul demonstrat:**
 
@@ -569,8 +569,6 @@ python src/neural_network/evaluate.py --model models/optimized_model.h5 --quick-
 
 Pentru eficientizarea SIA, acumularea datelor de antrenare din mai multe seturi ar schimba rezultatul inferenței. Pentru antrenare, folosirea hiperparametrilor de la primele execuții ar fi ajutat la atingerea obiectivelor tehnice. De asemenea, documentarea incrementală ar fi ajutat la urmărirea corespunzătoare a progresului.
 
-[Completați aici]
-
 ### 10.5 Direcții de Dezvoltare Ulterioară
 
 | **Termen** | **Îmbunătățire Propusă** | **Beneficiu Estimat** |
@@ -583,16 +581,15 @@ Pentru eficientizarea SIA, acumularea datelor de antrenare din mai multe seturi 
 
 ## 11. Bibliografie
 
-*[Minimum 3 surse cu DOI/link funcțional - format: Autor, Titlu, Anul, Link]*
+1.  **Jocher, G., Chaurasia, A., & Qiu, J.**, *Ultralytics YOLO (Version 8.0.0)*, 2023. URL: <https://github.com/ultralytics/ultralytics>
 
-1. [Autor], [Titlu articol/carte], [Anul]. DOI: [link] sau URL: [link]
-2. [Autor], [Titlu articol/carte], [Anul]. DOI: [link] sau URL: [link]
-3. [Autor], [Titlu articol/carte], [Anul]. DOI: [link] sau URL: [link]
-4. [Surse suplimentare dacă este cazul]
+2.  **Song, K., & Yan, Y.**, *A noise robust method based on deep learning for defect detection of steel surface*, 2013. DOI: [10.1109/IECON.2013.6699542](https://doi.org/10.1109/IECON.2013.6699542)
 
-**Exemple format:**
-- Abaza, B., 2025. AI-Driven Dynamic Covariance for ROS 2 Mobile Robot Localization. Sensors, 25, 3026. https://doi.org/10.3390/s25103026
-- Keras Documentation, 2024. Getting Started Guide. https://keras.io/getting_started/
+3.  **Luo, Q., Fang, X., Liu, L., Yang, C., & Sun, Y.**, *Automated Visual Defect Detection for Flat Steel Surface: A Survey*, 2020. DOI: [10.1109/TIM.2020.2995871](https://www.google.com/search?q=https://doi.org/10.1109/TIM.2020.2995871)
+
+4.  **Li, X., Li, C., & Zhang, Y.**, *A Surface Defect Detection Method for Steel Strip Based on Improved YOLOv8*, 2023. IEEE Access, Vol. 11. DOI: [10.1109/ACCESS.2023.3289056](https://ieeexplore.ieee.org/document/10158432)
+
+5.  **Shorten, C., & Khoshgoftaar, T. M.**, *A survey on Image Data Augmentation for Deep Learning*, 2019. Journal of Big Data, 6(1), 1-48. DOI: [10.1186/s40537-019-0197-0](https://doi.org/10.1186/s40537-019-0197-0)
 
 ---
 
