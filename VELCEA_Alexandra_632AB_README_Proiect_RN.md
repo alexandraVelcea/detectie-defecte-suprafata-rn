@@ -57,11 +57,10 @@ Acest proiect propune o soluție automatizată de tip Computer Vision, utilizân
 
 ### 2.2 Beneficii Măsurabile Urmărite
 
-*[Listați 3-5 beneficii concrete cu metrici țintă]*
 
   1. **Maximizarea Siguranței Calității (Recall Critic):** Ținta principală este atingerea unei rate de detecție (**Recall**) de **> 90%** pentru defectele critice (ex: *inclusion*, *crazing*), eliminând riscul ca piese defecte să ajungă la client (false negatives = 0 pentru defecte grave).
 
-  2. **Optimizarea Costurilor de Rebut (Precision):* Reducerea alarmelor false (**false positives**) la < 30%. Acest lucru previne oprirea inutilă a liniei de producție și aruncarea materialului bun, o problemă comună în sistemele de detecție bazate pe reguli clasice (non-AI).
+  2. **Optimizarea Costurilor de Rebut (Precision):** Reducerea alarmelor false (**false positives**) la < 30%. Acest lucru previne oprirea inutilă a liniei de producție și aruncarea materialului bun, o problemă comună în sistemele de detecție bazate pe reguli clasice (non-AI).
 
   3. **Consistență și Disponibilitate 24/7:** Eliminarea subiectivității umane și a factorului de oboseală. Modelul AI oferă o clasificare uniformă și repetabilă a defectelor, indiferent de tura de lucru sau de momentul zilei, asigurând un standard de calitate constant.
 
@@ -83,8 +82,8 @@ Acest proiect propune o soluție automatizată de tip Computer Vision, utilizân
 |----------------|---------|
 | **Origine date** | Dataset public |
 | **Sursa concretă** | https://www.kaggle.com/datasets/kaustubhdikshit/neu-surface-defect-database |
-| **Sursă imagini demo** | https://www.researchgate.net/figure/Samples-images-of-six-classes-of-typical-surface-defects_fig3_340436222 + https://www.mdpi.com/2076-3417/11/16/7657 |
-| **Număr total observații finale (N)** | aprox. 1100 |
+| **Sursă imagini demo** | https://www.researchgate.net/figure/Samples-images-of-six-classes-of-typical-surface-defects_fig3_340436222 + https://www.mdpi.com/2076-3417/11/16/7657 + https://datasetninja.com/severstal#download |
+| **Număr total observații finale (N)** | aprox. 3000 |
 | **Număr features** | 6 |
 | **Tipuri de date** | Categoriale / Imagini |
 | **Format fișiere** | JPG / XML |
@@ -95,11 +94,11 @@ Acest proiect propune o soluție automatizată de tip Computer Vision, utilizân
 
 | Câmp | Valoare |
 |------|---------|
-| **Total observații finale (N)** | [număr] |
-| **Observații originale (M)** | [număr] |
-| **Procent contribuție originală** | [X%] |
+| **Total observații finale (N)** | 3000 |
+| **Observații originale (M)** | [1200] |
+| **Procent contribuție originală** | [40%] |
 | **Tip contribuție** | [Simulare fizică / Senzori proprii / Etichetare manuală / Date sintetice] |
-| **Locație cod generare** | `src/data_acquisition/[nume_script.py]` |
+| **Locație cod generare** | `src/data_acquisition/generate_augmentation.py]` |
 | **Locație date originale** | `data/generated/` |
 
 **Descriere metodă generare/achiziție:**
@@ -112,9 +111,9 @@ Parametrii utilizați au inclus variații aleatorii de transparență (alpha ble
 
 | Set | Procent | Număr Observații |
 |-----|---------|------------------|
-| Train | 70% | 270 |
-| Validation | 15% | 45 |
-| Test | 15% | 45 |
+| Train | 70% | 2400 |
+| Validation | 15% | 300 |
+| Test | 15% | 300 |
 
 **Preprocesări aplicate:**
 
@@ -133,42 +132,37 @@ Parametrii utilizați au inclus variații aleatorii de transparență (alpha ble
 ### 4.1 Cele 3 Module Software
 
 | **Modul** | **Tehnologie** | **Status Etapa 4** |
-|-----------|----------------|--------------------|
-| **1. Data Acquisition** | Python (`google-genai`, `PIL`) | **Funcțional.** Scriptul se conectează la API, generează imagini pe baza prompt-ului și le salvează local cu timestamp. |
-| **2. Neural Network** | Python (`ultralytics` YOLOv8) | **Funcțional.** Arhitectura este definită (YOLOv8n), fișierul de config `data.yaml` este creat, antrenamentul poate fi inițiat. |
-| **3. Web Service / UI** | Python (Streamlit) | **Funcțional.** Script de inferență care ia o imagine, rulează modelul și afișează rezultatul cu bounding boxes. |
+| --- | --- | --- |
+| **1\. Data Acquisition** | Python (`Augmentation Script`, `PIL`) | **Funcțional.** Scriptul încarcă datele brute, le augmentează sintetic (generează defecte noi) și le pregătește pentru antrenament (format YOLO). |
+| **2\. Neural Network** | Python (`ultralytics` YOLOv8) | **Funcțional.** Arhitectura YOLOv8 este configurată, fișierul `data.yaml` este generat corect, iar antrenamentul produce un model (`best.pt`) capabil de inferență. |
+| **3\. Web Service / UI** | Python (`Streamlit`) | **Funcțional.** Interfața preia imaginea de la utilizator, apelează modelul antrenat pentru inferență și randează rezultatele vizuale (bounding boxes + scoruri) în timp real. |
 
 ### 4.2 State Machine
 
-**Locație diagramă:** `docs/state_machine.png` *(sau `state_machine_v2.png` dacă actualizată în Etapa 6)*
+**Locație diagramă:** `docs/state_machine.png` 
 
 **Stări principale și descriere:**
 
 | **Stare** | **Descriere** | **Condiție Intrare** | **Condiție Ieșire** |
 | --- | --- | --- | --- |
-| `IDLE` | Sistemul așteaptă input de la utilizator (stare de repaus). | Start aplicație / Finalizare ciclu anterior | Input primit (Buton "Load Image") |
-| `ACQUIRE_DATA` | Încărcarea imaginii selectate în memorie pentru procesare. | Eveniment "Load Image" declanșat | Imagine încărcată cu succes |
-| `PREPROCESS` | Curățarea datelor/variabilelor de la rularea anterioară (reset). | Imagine prezentă în memorie | Workspace curățat și pregătit |
-| `IS_VALID` | Verificarea integrității fișierului (format suportat, dimensiuni, corupere). | Preprocesare inițială completă | Rezultat validare (True/False) |
-| `INVALID` | Gestionarea erorilor de format; afișare mesaj eroare. | `IS_VALID` returnează **False** | Revenire automată în `IDLE` |
-| `INFERENCE (RN)` | Rularea modelului YOLOv8 pentru detecția defectelor. | `IS_VALID` returnează **True** | Predicții brute disponibile (Listă) |
-| `DEFECT_NOT_FOUND` | Gestionarea cazului în care piesa este conformă (nu sunt defecte). | Lista de predicții este goală | Rezultat setat ca "Normal" |
-| `CLASSIFY_DEFECT` | Identificarea tipului de defect și a coordonatelor (bounding box). | Lista de predicții conține elemente | Clasă și scor încredere extrase |
-| `GENERATE RESULTS` | Calculare statistici, salvare log-uri și actualizare interfață grafică. | Clasificare finalizată (Defect sau Normal) | Afișare rezultate -> Revenire `IDLE` |
+| **`IDLE`** | Sistemul așteaptă input de la utilizator (stare de repaus). | Start aplicație SAU Finalizare ciclu anterior. | Input primit (Buton "Load Image"). |
+| **`ACQUIRE_DATA`** | Citirea imaginii brute din fișierul uploadat. | Eveniment "Load Image" declanșat. | Imagine brută disponibilă în RAM. |
+| **`IS_VALID`** | Verificarea formatului (JPG/PNG) și a dimensiunilor minime. | Imagine încărcată. | **True** (merge la Preprocess) SAU **False** (merge la Invalid). |
+| **`INVALID`** | Gestionarea erorilor de format; afișare mesaj eroare utilizator. | `IS_VALID` returnează **False**. | Revenire automată în `IDLE`. |
+| **`PREPROCESS`** | Redimensionare imagine la 200x200px și normalizare pixeli (0-1). | `IS_VALID` returnează **True**. | Tensor/Matrice pregătită pentru model. |
+| **`INFERENCE (RN)`** | Rularea modelului YOLOv8 pre-antrenat pe imaginea procesată. | Preprocesare finalizată. | Listă de predicții (bounding boxes + clase). |
+| **`FIND_DEFECT`** (Decizie) | Verificarea listei de predicții (dacă există defecte detectate). | Inferență completă. | Lista > 0 (Defect) SAU Lista = 0 (Fără Defect). |
+| **`DEFECT_NOT_FOUND`** | Gestionarea cazului în care piesa este conformă (OK). | Lista de predicții este goală. | Imagine marcată cu chenar Verde (OK). |
+| **`CLASSIFY_DEFECT`** | Identificarea tipului (ex: Crazing) și desenarea conturului. | Lista de predicții conține elemente. | Imagine marcată cu chenar Roșu + Etichetă. |
+| **`GENERATE_RESULTS`** | Afișare imagine finală în UI și salvare log CSV. | Imaginea a fost marcată (Verde sau Roșu). | Afișare rezultate -> Revenire `IDLE`. |
 
 **Justificare alegere arhitectură State Machine:**
 
-*[1 paragraf: De ce această structură pentru problema voastră specifică?]*
-
-[Completați aici]
+Arhitectura de tip Finite State Machine (FSM) a fost selectată pentru a asigura robustețea și predictibilitatea necesare într-un scenariu industrial, unde stabilitatea software-ului este critică. Deoarece procesarea imaginilor cu rețele neuronale este intensivă computațional, FSM-ul garantează că modulul de inferență este activat exclusiv după validarea strictă a datelor de intrare (IS_VALID), prevenind astfel erorile de execuție sau blocarea sistemului din cauza fișierelor corupte.
 
 ### 4.3 Actualizări State Machine în Etapa 6 (dacă este cazul)
 
-| Componentă Modificată | Valoare Etapa 5 | Valoare Etapa 6 | Justificare Modificare |
-|----------------------|-----------------|-----------------|------------------------|
-| [ex: Threshold alertă] | [0.5] | [0.35] | [Minimizare False Negatives] |
-| [ex: Stare nouă adăugată] | N/A | `CONFIDENCE_CHECK` | [Filtrare predicții incerte] |
-| [Completați dacă e cazul] | | | |
+
 
 ---
 
@@ -177,53 +171,58 @@ Parametrii utilizați au inclus variații aleatorii de transparență (alpha ble
 ### 5.1 Arhitectura Rețelei Neuronale
 
 ```
-[Descrieți arhitectura - exemplu:]
-Input (shape: [32, 32, 3]) 
-  → Conv2D(32, 3x3, ReLU) → MaxPool(2x2)
-  → Conv2D(64, 3x3, ReLU) → MaxPool(2x2)
-  → Flatten
-  → Dense(128, ReLU) → Dropout(0.3)
-  → Dense(5, Softmax)
-Output: 5 clase
+1. INPUT (Pregătire):
+   → Imaginea originală este redimensionată automat la 640x640 pixeli și normalizată pentru a intra în rețea.
+
+2. BACKBONE (Extragere trăsături):
+   → Rețeaua scanează imaginea pentru a identifica modele vizuale brute: linii, texturi de rugină, forme neregulate (folosind CSPDarknet).
+
+3. NECK (Integrare):
+   → Combină detaliile fine (pentru defecte mici precum "pitted_surface") cu privirea de ansamblu (pentru defecte mari precum "patches"), asigurând că niciun defect nu este omis.
+
+4. HEAD (Decizie):
+   → Ramura 1 (Localizare): Calculează coordonatele exacte ale cutiei (Bounding Box: x, y, lățime, înălțime).
+   → Ramura 2 (Clasificare): Decide ce tip de defect este (ex: 85% "Crazing", 15% "Scratches").
+
+5. OUTPUT (Filtrare Finală):
+   → Algoritmul NMS (Non-Maximum Suppression) elimină cutiile duplicate care se suprapun, păstrând doar detecția cu scorul cel mai mare.
 ```
 
 **Justificare alegere arhitectură:**
 
-*[1-2 propoziții: De ce această arhitectură? Ce alternative ați considerat și de ce le-ați respins?]*
-
-[Completați aici]
+Am selectat varianta YOLOv8 Medium deoarece oferă compromisul ideal ("Sweet Spot") între acuratețea detectării defectelor subtile (precum crazing sau pitted surface) și viteza de inferență necesară în mediul industrial. Deși varianta Nano este mai rapidă, testele preliminare au arătat o rată inacceptabilă de False Negatives pe defectele mici;
 
 ### 5.2 Hiperparametri Finali (Model Optimizat - Etapa 6)
 
 | Hiperparametru | Valoare Finală | Justificare Alegere |
-|----------------|----------------|---------------------|
-| Learning Rate | [ex: 0.001] | [ex: Valoare standard Adam, convergență stabilă] |
-| Batch Size | [ex: 32] | [ex: Compromis memorie/stabilitate pentru N=15000 samples] |
-| Epochs | [ex: 50] | [ex: Early stopping după 10 epoci fără îmbunătățire] |
-| Optimizer | [ex: Adam] | [ex: Adaptive LR, potrivit pentru date de tip X] |
-| Loss Function | [ex: Categorical Crossentropy] | [ex: Clasificare multi-clasă cu 5 clase] |
-| Regularizare | [ex: Dropout 0.3 + L2(0.01)] | [ex: Prevenire overfitting observat în Exp 2] |
-| Early Stopping | [ex: patience=10, monitor=val_loss] | [ex: Oprire automată la convergență] |
+| **Hiperparametru** | **Valoare Finală** | **Justificare Alegere** |
+| --- | --- | --- |
+| **Learning Rate** | `lr0=0.0005` (cu `cos_lr=True`) | Rată inițială conservatoare (mai mică decât standardul 0.01) pentru fine-tuning stabil al modelului *Medium*, folosind *Cosine Annealing* pentru o convergență fină spre final. |
+| **Batch Size** | `16` | Compromis necesar pentru a acomoda rezoluția mare a imaginilor (`832px`) în memoria GPU (Colab), menținând totuși o estimare decentă a gradientului. |
+| **Epochs** | `150` | Număr extins pentru a garanta învățarea trăsăturilor complexe (ex: *crazing*), având mecanismul de *Early Stopping* ca siguranță. |
+| **Optimizer** | `AdamW` | Optimizator modern care gestionează *Weight Decay* mai eficient decât Adam standard, ideal pentru generalizare pe seturi de date industriale. |
+| **Loss Function** | `Box: 7.5` / `Cls: 0.5` / `DFL: 1.5` | Funcție compusă (CIoU + BCE). Ponderea mare pe `Box Loss` (7.5) indică faptul că **localizarea precisă** a defectului este prioritară față de simpla clasificare. |
+| **Regularizare** | `Weight Decay: 0.0005` + `Mosaic: 1.0` | Combinație de penalizare a greutăților (L2) și Augmentare agresivă (Mosaic/Mixup 0.15) pentru a preveni overfitting-ul pe un dataset limitat. |
+| **Early Stopping** | `patience=40` | Oprește antrenamentul dacă mAP-ul nu crește timp de 40 de epoci consecutive, salvând cel mai bun model (`best.pt`) și prevenind supra-învățarea. |
+| **Image Size** | `832` px | Rezoluție crescută (standardul este 640) esențială pentru a detecta defecte vizuale foarte fine și mici, specifice suprafețelor metalice. |
 
 ### 5.3 Experimente de Optimizare (minim 4 experimente)
 
-| Exp# | Modificare față de Baseline | Accuracy | F1-Score | Timp Antrenare | Observații |
-|------|----------------------------|----------|----------|----------------|------------|
-| **Baseline** | Configurația din Etapa 5 | [X.XX%] | [X.XX] | [X min] | Referință |
-| Exp 1 | [ex: LR 0.001 → 0.0001] | [X.XX%] | [X.XX] | [X min] | [ex: Convergență mai lentă, +2% acc] |
-| Exp 2 | [ex: +1 hidden layer (64 neuroni)] | [X.XX%] | [X.XX] | [X min] | [ex: Overfitting observat] |
-| Exp 3 | [ex: Dropout 0.3 → 0.5] | [X.XX%] | [X.XX] | [X min] | [ex: Reduce overfitting din Exp 2] |
-| Exp 4 | [ex: Batch 32 → 64] | [X.XX%] | [X.XX] | [X min] | [ex: Stabilitate gradient mai bună] |
-| Exp 5 | [ex: Augmentări domeniu specifice] | [X.XX%] | [X.XX] | [X min] | [ex: Generalizare îmbunătățită] |
-| **FINAL** | [Configurația aleasă] | **[X.XX%]** | **[X.XX]** | [X min] | **Modelul folosit în producție** |
+| **Exp#** | **Modificare față de Baseline (Etapa 5)** | **Accuracy** | **F1-score** | **Timp antrenare** | **Observații** |
+|----------|------------------------------------------|--------------|--------------|-------------------|----------------|
+| Baseline - **surface_defect_model** | Configurația din Etapa 5 | 0.69 | 0.65 | 12min | Referință |
+| Exp 1 - **defect_detector_HD** | Scădere batch 16 → 2, creștere imgsz 200px → 832px | 0.68 | 0.62 | 2h 15 min | Creștere scor F1 |
+| Exp 2 - **defect_detector_HD6** | YOLOV8 Nano -> YOLOV8 Medium | - | - | 1 min | Eroare CUDA out of memory |
+| Exp 3 - **defect_detector_HD8** | YOLOV8 Nano, patience = 20 | - | - | 4h | Eroare CUDA out of memory |
+| Exp 4 - **defect_detector3** | Patience = 15, batch = 16, imgsz = 200px | 0.67 | 0.63 | 18min | Reduce overfitting |
+| Exp 5 - **defect_detector_ult** | YOLOV8 Medium, creștere epoci 100 -> 150, patience = 40, imgs = 832px, adăugare parametri optimizare | 0.73 | 0.69 | 3h 30min | **BEST** - ales pentru final |
+| **FINAL** | **defect_detector_ult** | **0.73** | **0.69** | 3h 30min | **Modelul folosit în producție** |
 
 **Justificare alegere model final:**
 
-*[1 paragraf: De ce această configurație? Ce compromisuri ați făcut între accuracy/timp/complexitate?]*
+Modelul **defect_detector_ult** a fost selectat ca soluție finală deoarece a demonstrat o creștere semnificativă a performanței (+5.8% la acuratețe și +6.15% la F1-Score) comparativ cu Baseline-ul, un câștig crucial pentru identificarea defectelor subtile în producție. Deși timpul de antrenare a crescut considerabil (de la 12 minute la 3.5 ore), acest compromis este acceptabil deoarece antrenarea este un cost unic ("one-time cost"), în timp ce beneficiul preciziei se reflectă în fiecare inferență ulterioară.
 
-[Completați aici]
-
-**Referințe fișiere:** `results/optimization_experiments.csv`, `models/optimized_model.h5`
+**Referințe fișiere:** `results/optimization_experiments.csv`, `models/defect_detector_ult/weights/best.pt`
 
 ---
 
@@ -233,19 +232,20 @@ Output: 5 clase
 
 | Metric | Valoare | Target Minim | Status |
 |--------|---------|--------------|--------|
-| **Accuracy** | [X.XX%] | ≥70% | [✓/✗] |
-| **F1-Score (Macro)** | [X.XX] | ≥0.65 | [✓/✗] |
-| **Precision (Macro)** | [X.XX] | - | - |
-| **Recall (Macro)** | [X.XX] | - | - |
+| **Accuracy** | [73.5%] | ≥70% | [✓] |
+| **F1-Score (Macro)** | [0.68] | ≥0.65 | [✓] |
+| **Precision (Macro)** | [66.3%] | - | - |
+| **Recall (Macro)** | [70.7%] | - | - |
 
 **Îmbunătățire față de Baseline (Etapa 5):**
 
 | Metric | Etapa 5 (Baseline) | Etapa 6 (Optimizat) | Îmbunătățire |
 |--------|-------------------|---------------------|--------------|
-| Accuracy | [X.XX%] | [X.XX%] | [+X.XX%] |
-| F1-Score | [X.XX] | [X.XX] | [+X.XX] |
+| Accuracy | [69%] | [73%] | [+5.8%] |
+| F1-Score | [0.65] | [0.68] | [+6.15%] |
 
-**Referință fișier:** `results/final_metrics.json`
+
+**Referință fișier:** `results/test_metrics.json`
 
 ### 6.2 Confusion Matrix
 
@@ -253,12 +253,12 @@ Output: 5 clase
 
 **Interpretare:**
 
-| Aspect | Observație |
-|--------|------------|
-| **Clasa cu cea mai bună performanță** | [Nume clasă] - Precision [X%], Recall [Y%] |
-| **Clasa cu cea mai slabă performanță** | [Nume clasă] - Precision [X%], Recall [Y%] |
-| **Confuzii frecvente** | [ex: Clasa A confundată frecvent cu Clasa B - posibil din cauza similarității vizuale] |
-| **Dezechilibru clase** | [ex: Clasa C are doar 5% din date - recall scăzut explicabil] |
+| **Aspect** | **Observație** |
+| --- | --- |
+| **Clasa cu cea mai bună performanță** | **Patches** - Precision **~83%**, Recall **~82%** (78 detecții corecte vs 16 false positives și 17 false negatives). Modelul învață foarte bine forma distinctă a acestui defect. |
+| **Clasa cu cea mai slabă performanță** | **Crazing** - Precision **~54%**, Recall **~43%**. Este cea mai problematică clasă: 44 de imagini de fundal au fost clasificate greșit ca "Crazing" (Ghost detections), iar 28 de defecte reale au fost ratate (văzute ca fundal). |
+| **Confuzii frecvente** | **Defect vs Background**. Matricea arată o separare excelentă între clasele de defecte (ex: nu confundă *crazing* cu *scratches*), dar o confuzie majoră între **Defecte și Fundal**. Ex: 31 de *scratches* au fost ratate (clasificate ca background), iar 44 de imagini curate au fost marcate ca având *crazing*. |
+| **Dezechilibru clase / Observații** | Clasa **Pitted_Surface** are o precizie mare (~85%), dar un Recall mic (~65%), ceea ce înseamnă că modelul este conservator: când spune că e "pitted", are dreptate, dar ratează multe cazuri subtile. |
 
 ### 6.3 Analiza Top 5 Erori
 
@@ -272,15 +272,24 @@ Output: 5 clase
 
 ### 6.4 Validare în Context Industrial
 
+### 6.4 Validare în Context Industrial
+
 **Ce înseamnă rezultatele pentru aplicația reală:**
 
-*[1 paragraf: Traduceți metricile în impact real în domeniul vostru industrial]*
+Analiza matricei de confuzie relevă un impact economic mixt. Pentru defectele evidente precum **Patches** sau **Inclusion**, modelul este robust, oprind peste **80%** din piesele neconforme să ajungă la client. Totuși, pentru defectele fine (*Crazing*), sistemul este "hiper-sensibil": din 100 de piese curate (*Background*), modelul clasifică eronat 44 ca fiind defecte (*False Positives*). Într-un flux real, acest lucru ar bloca linia de producție inutil în **44%** din cazurile de rulare normală, generând costuri operaționale de reinspecție manuală (estimat: 44 opriri × 10 RON = 440 RON/oră pierderi). Pe de altă parte, riscul critic vine de la clasa **Scratches**, unde 31 de defecte reale au fost ignorate (clasificate ca *Background*), ceea ce înseamnă un risc de reclamație de client de aprox. **30%** pentru acest tip de defect.
 
-[ex: Din 100 de piese cu defecte reale, modelul detectează corect 78 (Recall=78%). 22 de piese defecte ajung la client - cost estimat: 22 × 50 RON = 1100 RON/lot. În același timp, din 100 piese bune, 8 sunt clasificate greșit ca defecte (FP=8%) - cost reinspecție: 8 × 5 RON = 40 RON/lot.]
+**Pragul de acceptabilitate pentru domeniu:** **Recall ≥ 85%** (pentru siguranța calității) și **False Positive Rate ≤ 10%** (pentru eficiența liniei).
 
-**Pragul de acceptabilitate pentru domeniu:** [ex: Recall ≥ 85% pentru defecte critice]  
-**Status:** [Atins / Neatins - cu diferența]  
-**Plan de îmbunătățire (dacă neatins):** [ex: Augmentare date pentru clasa subreprezentată, ajustare threshold]
+**Status:** **Parțial Atins**.
+
+-   *Obiectiv atins pentru:* Patches, Inclusion (Recall satisfăcător).
+-   *Obiectiv neatins pentru:* Crazing (prea multe alarme false) și Scratches (prea multe defecte scăpate).
+
+**Plan de îmbunătățire:**
+
+1.  **Ajustare Threshold:** Creșterea pragului de încredere (Confidence Threshold) la `0.6` strict pentru clasa *Crazing* pentru a reduce alarmele false.
+2.  **Negative Mining:** Re-antrenarea modelului cu un set extins de imagini *Background* (fără defecte) pentru a învăța rețeaua să distingă mai bine textura normală a oțelului de *Crazing*.
+3.  **High-Res Augmentation:** Pentru *Scratches*, augmentarea specifică a contrastului, deoarece aceste defecte fine se pierd în zgomotul imaginii la rezoluții standard.
 
 ---
 
@@ -288,21 +297,26 @@ Output: 5 clase
 
 ### 7.1 Modificări Implementate în Etapa 6
 
-| Componentă | Stare Etapa 5 | Modificare Etapa 6 | Justificare |
-|------------|---------------|-------------------|-------------|
-| **Model încărcat** | `trained_model.h5` | `optimized_model.h5` | [ex: +8% accuracy, -12% FN] |
-| **Threshold decizie** | [ex: 0.5 default] | [ex: 0.35 pentru clasa 'defect'] | [ex: Minimizare FN în context producție] |
-| **UI - feedback vizual** | [ex: Da/Nu text] | [ex: Bară confidence + valoare %] | [ex: Informare operator pentru decizii] |
-| **Logging** | [ex: Doar predicție] | [ex: Predicție + confidence + timestamp] | [ex: Audit trail pentru QA] |
-| [Alte modificări] | [Completați] | [Completați] | [Completați] |
+| **Componentă** | **Stare Etapa 5 (Baseline)** | **Modificare Etapa 6 (Final)** | **Justificare** |
+| --- | --- | --- | --- |
+| **Model încărcat** | `surface_defect_model.pt` (Nano) | `defect_detector_ult.pt` (Medium) | **+6.15% F1-Score**, capacitate superioară de extragere a trăsăturilor fine (ex: *crazing*). |
+| **Rezoluție Input** | 200 x 200 px (Standard) | **832 x 832 px** (High-Res) | Defectele de tip *Scratches* și *Pitted Surface* se pierdeau la redimensionarea standard (pixelare). |
+| **Threshold Decizie** | 0.25 (Global Default) | **Dinamic:** 0.60 (*Crazing*) / 0.20 (*Scratches*) | **Reducere FP** pentru *Crazing* (care avea multe alarme false) și **Reducere FN** pentru *Scratches*. |
+| **UI - Feedback Vizual** | Bounding Box simplu | **Color-Coding** + Scor % | Operatorul identifică instant starea OK/NOK (Visual Management); elimină ambiguitatea. |
+| **Logging Date** | Fără salvare (Console only) | **CSV Export** (`timestamp`, `cls`, `conf`) | Asigurarea trasabilității loturilor și audit de calitate post-producție. |
+| **Pre-procesare** | Resize simplu | **Contrast Enhancement (CLAHE)** | Îmbunătățirea vizibilității defectelor de textură (*Rolled-in Scale*) înainte de inferență. |
 
 ### 7.2 Screenshot UI cu Model Optimizat
 
 **Locație:** `docs/screenshots/inference_optimized.png`
 
-*[Descriere scurtă: Ce se vede în screenshot? Ce demonstrează?]*
+Această captură de ecran ilustrează o sesiune de inferență reușită a modelului optimizat (defect_detector_ult) în interfața Streamlit, demonstrând capacitatea sa operațională:
 
-[Completați aici]
+Detecție precisă: Modelul a identificat corect un defect vertical de tip `inclusion` (incluziune), încadrându-l perfect cu un bounding box albastru.
+
+Scor de încredere: Defectul a fost clasificat cu o certitudine de 55.5%. Deși pare moderată, aceasta este suficientă pentru a declanșa alarma, fiind peste pragul de siguranță setat manual la 0.40 în meniul din stânga.
+
+Performanță: Sidebar-ul confirmă metricile finale ale modelului: o acuratețe solidă de 73.48% și o latență de inferență extrem de mică, de 35 ms (aproximativ 28 FPS), ceea ce îl califică pentru implementarea pe linii de viteză mare.
 
 ### 7.3 Demonstrație Funcțională End-to-End
 
@@ -312,13 +326,13 @@ Output: 5 clase
 
 | Pas | Acțiune | Rezultat Vizibil |
 |-----|---------|------------------|
-| 1 | Input | [ex: Upload imagine nouă (NU din train/test)] |
-| 2 | Procesare | [ex: Bară de progres + preprocesare vizibilă] |
-| 3 | Inferență | [ex: Predicție afișată: "Clasa: Defect, Confidence: 87%"] |
-| 4 | Decizie | [ex: Alertă roșie + sunet pentru operator] |
+| 1 | Input | Upload imagine nouă |
+| 2 | Procesare | Preprocesare vizibilă |
+| 3 | Inferență | Predicție `pitted_surface` cu scor de încredere și coordonate afișate |
+| 4 | Decizie | - |
 
-**Latență măsurată end-to-end:** [X] ms  
-**Data și ora demonstrației:** [DD.MM.YYYY, HH:MM]
+**Latență măsurată end-to-end:** 35 ms  
+**Data și ora demonstrației:** [09.02.2026, 16:00]
 
 ---
 
@@ -357,7 +371,7 @@ proiect-rn-[nume-prenume]/
 │       └── f1_comparison.png               # Comparație F1 experimente
 │
 ├── data/
-│   ├── README.md                           # Descriere detaliată dataset
+│   ├── README.md             ***              # Descriere detaliată dataset
 │   ├── raw/                                # Date brute originale
 │   ├── processed/                          # Date curățate și transformate
 │   ├── generated/                          # Date originale (contribuția ≥40%)
@@ -367,7 +381,7 @@ proiect-rn-[nume-prenume]/
 │
 ├── src/
 │   ├── data_acquisition/                   # MODUL 1: Generare/Achiziție date
-│   │   ├── README.md                       # Documentație modul
+│   │   ├── README.md         ***              # Documentație modul
 │   │   ├── generate.py                     # Script generare date originale
 │   │   └── [alte scripturi achiziție]
 │   │
@@ -378,7 +392,7 @@ proiect-rn-[nume-prenume]/
 │   │   └── combine_datasets.py             # Combinare date originale + externe
 │   │
 │   ├── neural_network/                     # MODUL 2: Model RN
-│   │   ├── README.md                       # Documentație arhitectură RN
+│   │   ├── README.md           ***            # Documentație arhitectură RN
 │   │   ├── model.py                        # Definire arhitectură (Etapa 4)
 │   │   ├── train.py                        # Script antrenare (Etapa 5)
 │   │   ├── evaluate.py                     # Script evaluare metrici (Etapa 5)
@@ -386,7 +400,7 @@ proiect-rn-[nume-prenume]/
 │   │   └── visualize.py                    # Generare grafice și vizualizări
 │   │
 │   └── app/                                # MODUL 3: UI/Web Service
-│       ├── README.md                       # Instrucțiuni lansare aplicație
+│       ├── README.md         ***              # Instrucțiuni lansare aplicație
 │       └── main.py                         # Aplicație principală
 │
 ├── models/
@@ -400,7 +414,7 @@ proiect-rn-[nume-prenume]/
 │   ├── test_metrics.json                   # Metrici baseline test set (Etapa 5)
 │   ├── optimization_experiments.csv        # Toate experimentele optimizare (Etapa 6)
 │   ├── final_metrics.json                  # Metrici finale model optimizat (Etapa 6)
-│   └── error_analysis.json                 # Analiza detaliată erori (Etapa 6)
+│   └── error_analysis.json       ***          # Analiza detaliată erori (Etapa 6)
 │
 ├── config/
 │   ├── preprocessing_params.pkl            # Parametri preprocesare salvați (Etapa 3)
@@ -480,17 +494,17 @@ pip install -r requirements.txt
 
 ```bash
 # Pasul 1: Preprocesare date (dacă rulați de la zero)
-python src/preprocessing/data_cleaner.py
-python src/preprocessing/data_splitter.py --stratify --random_state 42
+python src/data_acquisition/generate_augmentation.py
+python src/preprocessing/xml_to_txt.py
 
 # Pasul 2: Antrenare model (pentru reproducere rezultate)
-python src/neural_network/train.py --config config/optimized_config.yaml
+python src/neural_network/train.py --config config/data.yaml
 
 # Pasul 3: Evaluare model pe test set
-python src/neural_network/evaluate.py --model models/optimized_model.h5
+python src/neural_network/evaluate.py
 
 # Pasul 4: Lansare aplicație UI
-streamlit run src/app/main.py
+python src/app/main.py
 # sau: python src/app/main.py (pentru Flask/FastAPI)
 # sau: [instrucțiuni LabVIEW dacă aplicabil]
 ```
@@ -505,14 +519,7 @@ python -c "from src.neural_network.model import load_model; m = load_model('mode
 python src/neural_network/evaluate.py --model models/optimized_model.h5 --quick-test
 ```
 
-### 9.5 Structură Comenzi LabVIEW (dacă aplicabil)
 
-```
-[Completați dacă proiectul folosește LabVIEW]
-1. Deschideți [nume_proiect].lvproj
-2. Rulați Main.vi
-3. ...
-```
 
 ---
 
@@ -520,22 +527,35 @@ python src/neural_network/evaluate.py --model models/optimized_model.h5 --quick-
 
 ### 10.1 Evaluare Performanță vs Obiective Inițiale
 
-| Obiectiv Definit (Secțiunea 2) | Target | Realizat | Status |
-|--------------------------------|--------|----------|--------|
-| [Obiectiv 1 din 2.2] | [target] | [realizat] | [✓/✗] |
-| [Obiectiv 2 din 2.2] | [target] | [realizat] | [✓/✗] |
-| Accuracy pe test set | ≥70% | [X.XX%] | [✓/✗] |
-| F1-Score pe test set | ≥0.65 | [X.XX] | [✓/✗] |
-| [Metric specific domeniului] | [target] | [realizat] | [✓/✗] |
+| **Obiectiv Definit** | **Target** | **Realizat** | **Status** |
+| --- | --- | --- | --- |
+| **Eficiență Operațională (Latență)** | **< 50ms** | **35 ms** | **[✓] Atins** |
+| **Siguranța Calității (Recall Critic)** | **> 90%** | **70.72%** (Macro Recall) | **[✗] Parțial** |
+| **Reducerea Rebuturilor (False Pos.)** | **< 5%** | **33.70%** | **[✗] Neatins** |
+| **Accuracy pe test set** | **≥ 70%** | **73.48%** | **[✓] Atins** |
+| **F1-Score pe test set** | **≥ 0.65** | **0.6844** | **[✓] Atins** |
+| **Augmentare Date Sintetice** | **+40%** | **+40%** (Script dedicat) | **[✓] Atins** |
 
 ### 10.2 Ce NU Funcționează – Limitări Cunoscute
 
 *[Fiți onești - evaluatorul apreciază identificarea clară a limitărilor]*
 
-1. **Limitare 1:** [ex: Modelul eșuează pe imagini cu iluminare <50 lux - accuracy scade la 45%]
-2. **Limitare 2:** [ex: Latența depășește 100ms pentru batch size >32 - neadecvat pentru real-time]
-3. **Limitare 3:** [ex: Clasa "defect_minor" are recall doar 52% - date insuficiente]
-4. **Funcționalități planificate dar neimplementate:** [ex: Export ONNX, integrare API extern]
+-   **Sensibilitate Excesivă la Texturi (High False Positive Rate - Crazing):**
+
+    -   Modelul are o dificultate majoră în a distinge textura naturală, rugoasă a oțelului (*Background*) de defectul *Crazing*. Matricea de confuzie arată că **44%** din imaginile curate au fost clasificate greșit ca având acest defect. Acest lucru duce la opriri inutile ale liniei de producție.
+
+        -   **Dificultate la Defecte Fine (Low Recall - Scratches):**
+
+    -   În ciuda creșterii rezoluției la 832px, modelul încă "scapă" defectele de tip *Scratches* (zgârieturi fine), având un Recall scăzut (~60%). Zgârieturile superficiale cu contrast mic se pierd în procesul de *downsampling* al rețelei neuronale.
+
+        -   **Dependența de Hardware (GPU vs CPU):**
+
+    -   Latența de **35ms** este atinsă doar pe mediu cu accelerare GPU (CUDA). Pe un CPU standard (fără placă video dedicată), timpul de inferență pentru modelul *Medium* la rezoluția 832px crește la **> 200ms**, făcând soluția neutilizabilă în timp real pe hardware *low-end*.
+
+        -   **Bias introdus de Datele Sintetice:**
+
+    -   Deoarece 40% din setul de date este generat artificial (augmentare geometrică), există riscul ca modelul să fi învățat "tiparul" generării sintetice (linii perfect drepte, elipse perfecte) mai bine decât variabilitatea organică a defectelor reale.
+
 
 ### 10.3 Lecții Învățate (Top 5)
 
@@ -555,11 +575,11 @@ python src/neural_network/evaluate.py --model models/optimized_model.h5 --quick-
 
 ### 10.5 Direcții de Dezvoltare Ulterioară
 
-| Termen | Îmbunătățire Propusă | Beneficiu Estimat |
-|--------|---------------------|-------------------|
-| **Short-term** (1-2 săptămâni) | [ex: Augmentare date pentru clasa subreprezentată] | [ex: +10% recall pe clasa "defect_minor"] |
-| **Medium-term** (1-2 luni) | [ex: Implementare model ensemble] | [ex: +3-5% accuracy general] |
-| **Long-term** | [ex: Deployment pe edge device (Raspberry Pi)] | [ex: Latență <20ms, cost hardware redus] |
+| **Termen** | **Îmbunătățire Propusă** | **Beneficiu Estimat** |
+| --- | --- | --- |
+| **Short-term** (1-2 săptămâni) | **Negative Mining & Thresholding Dinamic:** Re-antrenarea modelului cu 500+ imagini de fundal "dificile" (curate, dar cu textură rugoasă) și setarea pragului de decizie la 0.6 strict pentru clasa *Crazing*. | **Scădere False Positives cu ~15-20%** pentru *Crazing*, reducând opriri inutile ale liniei. |
+| **Medium-term** (1-2 luni) | **Implementare SAHI (Slicing Aided Hyper Inference):** Integrarea bibliotecii SAHI pentru a "tăia" imaginea de 832px în ferestre mai mici la inferență, specific pentru detectarea zgârieturilor fine (*Scratches*). | **Creștere Recall cu +10-15%** pe defectele mici (*Scratches*, *Pitted Surface*) care se pierd la redimensionare. |
+| **Long-term** (> 6 luni) | **Optimizare TensorRT & Edge Deployment:** Conversia modelului din PyTorch în format TensorRT (FP16) și integrarea pe un dispozitiv NVIDIA Jetson Orin la linia de producție. | **Latență stabilă < 15ms** și eliminarea dependenței de conexiune la Cloud/PC dedicat. |
 
 ---
 

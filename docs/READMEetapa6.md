@@ -717,7 +717,7 @@ python src/neural_network/visualize.py --all
 - [ ] Plan post-feedback scris
 
 ### Verificări Tehnice
-- [ ] `requirements.txt` actualizat
+- [x] `requirements.txt` actualizat
 - [ ] Toate path-urile RELATIVE
 - [ ] Cod nou comentat (minimum 15%)
 - [x] `git log` arată commit-uri incrementale
@@ -736,7 +736,7 @@ python src/neural_network/visualize.py --all
 - [ ] Commit: `"Etapa 6 completă – Accuracy=X.XX, F1=X.XX (optimizat)"`
 - [ ] Tag: `git tag -a v0.6-optimized-final -m "Etapa 6 - Model optimizat + Concluzii"`
 - [ ] Push: `git push origin main --tags`
-- [ ] Repository accesibil (public sau privat cu acces profesori)
+- [x] Repository accesibil (public sau privat cu acces profesori)
 
 ---
 
